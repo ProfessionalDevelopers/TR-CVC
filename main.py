@@ -373,6 +373,7 @@ try:
             len(GRID) + 1,
             0,
             f'Move with (arrows), press (space) to toggle a step, (x) to clear the pattern\n\n⇧/(-/=) BPM: {BPM}\n⇧/(5/6/0) Swing: {SWING}%\n(8): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}\n(o/p): Slide Amount: {SLIDE_AMT * 100}%\n(m): Mute/Unmute Track\n\n(q) to quit',
+
         )
 
         stdscr.move(
@@ -457,6 +458,8 @@ try:
             BASSLINE_FILTER_FREQ /= 2
         elif c == ord("x"):
             GRID = ["x" * 16 for _ in range(len(instruments))]
+        elif c == ord("z"):
+            GRID[CURSOR[0]] = "x" * STEP_COUNT
         elif c == ord("m"):  # Mute/unmute the current track
             if instruments[CURSOR[0]].level == 0.0:
                 INSTRUMENT_MUTE_STATUS[CURSOR[0]] = False  # Unmute the track

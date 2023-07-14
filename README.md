@@ -21,7 +21,7 @@ Video and sound examples:
 - Per-channel mute and un-mutes
 - Configurable per-instrument mixer levels
 - Adjustable tempo: -/= for jumps of 5, hold shift for single beat increments
-- Swing (use keys 5, 6, and 0 to reset)
+- Swing (use keys 5, 6 to adjust)
 - Automatic saving and restoration of sequences
 
 # Installation and Development
