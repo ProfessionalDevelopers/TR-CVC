@@ -16,8 +16,12 @@ https://github.com/ProfessionalDevelopers/TR-CVC/assets/1034155/59721b06-78c2-44
 - A simplistic bassline sequencer allowing octave jumps of a square wav
 - Configurable highpass filter for the bass sequence
 - A ...piano(?) sound. Another sound.
-- ~Swing~ (currently broken)
 - Per-channel mute and un-mutes
 - Change kits while playing
 - Configurable per-instrument mixer levels per
 - Automatic saving and restoration of sequences
+
+#To come:
+- Adjustable BPM
+- Swing
+- FX?
