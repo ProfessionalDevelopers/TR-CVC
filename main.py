@@ -196,6 +196,7 @@ if os.path.exists(SEQUENCE_FILE):
         BPM = state.get("bpm", 120.0)
         BASSLINE_FILTER_FREQ = state.get("bassline_freq", 880.0)
         SLIDE_AMT = state.get("slide_amt", 0.1)
+        STEP_COUNT = state.get("step_count", 16)  # load step count from file
         # Only update the mute status if it exists in the loaded state
         if "mute_status" in state:
             INSTRUMENT_MUTE_STATUS = {
@@ -226,6 +227,8 @@ def dump_sequence():
                 "bassline_freq": BASSLINE_FILTER_FREQ,
                 "mute_status": INSTRUMENT_MUTE_STATUS,  # Add the mute status to the saved state
                 "slide_amt": SLIDE_AMT,
+                "step_count": STEP_COUNT,  # add step count to the saved state
+
             },
             f,
         )
@@ -379,9 +382,7 @@ Master level: {MASTER_LEVEL}
                 CURSOR[1] = STEP_COUNT - 1  # move cursor to the last step
         elif c == ord("2"):
             STEP_COUNT = 32
-            GRID = [
-                row.ljust(STEP_COUNT, "x") for row in GRID
-            ]  # expand each row to 32 steps
+            GRID = [row + row for row in GRID]  # duplicate each row
         elif c == ord(" "):
             if CURSOR[0] in [
                 len(instruments) - 2,
