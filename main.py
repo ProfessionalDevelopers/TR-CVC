@@ -134,17 +134,17 @@ INSTRUMENTS_808 = [ Instrument('⦿ BD', KICK_808, 0.8),
                     Instrument('♩ BL', None, 0.2), 
                     Instrument('♪ PA', None, 0.8)]
 
-INSTRUMENTS_909 = [Instrument('BD', KICK_909, 0.8), 
-                   Instrument('SD', SNARE_909, 1.0), 
-                   Instrument('LT', LOW_TOM_909, 0.8), 
-                   Instrument('MT', MID_TOM_909, 0.7), 
-                   Instrument('HT', HIGH_TOM_909, 0.9),
-                   Instrument('CP', CLAP_909, 0.6),  
-                   Instrument('CB', COWBELL_909, 1.0),
-                   Instrument('HH', HIHAT_909, 1.0),
-                   Instrument('OH', OPEN_HIHAT_909, 1.0), 
-                   Instrument('BL', None, 0.2), 
-                   Instrument('PA', None, 0.8)]
+INSTRUMENTS_909 = [Instrument('⦿ BD',  KICK_909, 0.8), 
+                   Instrument('◼ SD',  SNARE_909, 1.0), 
+                   Instrument('⚆ LT', LOW_TOM_909, 0.8), 
+                   Instrument('⚇ MT', MID_TOM_909, 0.7), 
+                   Instrument('⚈ HT', HIGH_TOM_909, 0.9),
+                   Instrument('॥ CP',  CLAP_909, 0.6),  
+                   Instrument('Ⓚ CB',  COWBELL_909, 1.0),
+                   Instrument('⨂ HH',  HIHAT_909, 1.0),
+                   Instrument('⨁ OH',  OPEN_HIHAT_909, 1.0), 
+                   Instrument('♩ BL', None, 0.2), 
+                   Instrument('♪ PA', None, 0.8)]
 
 stdscr = curses.initscr()
 curses.noecho()
