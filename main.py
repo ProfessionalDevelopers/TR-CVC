@@ -374,8 +374,6 @@ try:
         elif c in (ord("8"), ord("9")):
             CURRENT_KIT = {ord("8"): "808", ord("9"): "909"}[c]
             instruments = INSTRUMENTS_808 if CURRENT_KIT == "808" else INSTRUMENTS_909
-        elif c == ord("0") or c == ord(")"):  # handle shift for resetting
-            SWING = 50
         elif c == ord("5"):
             SWING = SWING = max(SWING - 5, 0)
         elif c == ord("6"):
