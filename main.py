@@ -22,6 +22,7 @@ SWING = 50
 PLAYBACK_THREAD = None
 CURRENT_KIT = "808"
 BASSLINE_FILTER_FREQ = 880.0
+SLIDE_AMT = 0.1
 
 
 class Instrument:
@@ -193,6 +194,7 @@ if os.path.exists(SEQUENCE_FILE):
         CURRENT_KIT = state["current_kit"]
         BPM = state.get("bpm", 120.0)
         BASSLINE_FILTER_FREQ = state.get("bassline_freq", 880.0)
+        SLIDE_AMT = state.get("slide_amt", 0.1)
         # Only update the mute status if it exists in the loaded state
         if "mute_status" in state:
             INSTRUMENT_MUTE_STATUS = {
@@ -222,6 +224,7 @@ def dump_sequence():
                 "bpm": BPM,
                 "bassline_freq": BASSLINE_FILTER_FREQ,
                 "mute_status": INSTRUMENT_MUTE_STATUS,  # Add the mute status to the saved state
+                "slide_amt": SLIDE_AMT,
             },
             f,
         )
@@ -275,7 +278,11 @@ def update_sequence():
                 if j == -2:  # if it's the 'BL' line
                     sound = (
                         generate_acid_bassline(
-                            freqs["oup".index(GRID[j][i])], BPMFRAME, 0.025, 90, 0
+                            freqs["oup".index(GRID[j][i])],
+                            BPMFRAME,
+                            BPMFRAME * SLIDE_AMT,
+                            90,
+                            0,
                         )
                         * instruments[j].level
                     )
@@ -319,7 +326,7 @@ while True:
     stdscr.addstr(
         len(GRID) + 2,
         0,
-        f'Move with (arrows), press (space) \nto toggle a step, (x) to clear the \npattern\n\n⇧/(-/=) BPM: {BPM}\n⇧/(5/6/0) Swing: {SWING}%\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f/g): Bassline Filter Cutoff: {BASSLINE_FILTER_FREQ}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}',
+        f'Move with (arrows), press (space) \nto toggle a step, (x) to clear the \npattern\n\n⇧/(-/=) BPM: {BPM}\n⇧/(5/6/0) Swing: {SWING}%\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(#/#): Slide Amount: {SLIDE_AMT * 100}%\n(f/g): Bassline Filter Cutoff: {BASSLINE_FILTER_FREQ}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}',
     )
 
     stdscr.move(
@@ -369,6 +376,10 @@ while True:
         SWING = SWING = max(SWING - 1, 0)
     elif c == ord("^"):
         SWING = min(SWING + 1, 100)
+    elif c == ord("p"):
+        SLIDE_AMT = min(SLIDE_AMT + 0.05, 1)  # swing can't go above 1
+    elif c == ord("o"):
+        SLIDE_AMT = max(SLIDE_AMT - 0.05, 0)  # swing can't go below 0
     elif c == ord("-"):
         BPM = max(BPM - 5, 1)  # BPM cannot go below 1
         BPMFRAME = (60 / BPM) / 4
