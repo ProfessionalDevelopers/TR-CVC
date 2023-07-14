@@ -12,16 +12,14 @@ Video and sound examples:
 
 # Features
 
-- Simple 16-step sequencer: press space to toggle a step, and on bass and piano lines, repeat it to choose a different note.
+- Simple 16/32-step sequencer
 - Bad approxmiations of classic roland 808 and 909 sounds: Bass Drum, Snare, Low- Mid- and High-Toms, Clap, Cowbell, Hihat and Open Hihat, all done in code, no samples.
-- A simplistic bassline sequencer allowing octave jumps of a square wave
-- Cycle between generated 808  and 909 kits, or local samples while playing
-- Configurable lowpass filter for the bass sequence
-- A ...piano(?) sound. Another sound. Plays some variation on Am7
-- Per-channel mute and un-mutes
-- Configurable per-instrument mixer levels
-- Adjustable tempo: -/= for jumps of 5, hold shift for single beat increments
-- Swing (use keys 5, 6 to adjust)
+- Can also load a sample kit.
+- Bassline instrument including filter and slide
+- Piano stabs! 
+- Cycle between kits while playing
+- Configurable per-instrument mixer levels, and per-channel live mute and unmute
+- Adjustable tempo and swing
 - Automatic saving and restoration of sequences
 
 # Installation and Development
