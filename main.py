@@ -7,6 +7,11 @@ import threading
 import random
 import json
 import os
+import librosa
+import soundfile as sf
+
+current_dir = os.path.dirname(os.path.realpath(__file__))
+
 
 IS_EXITING = False
 
@@ -24,14 +29,19 @@ PLAYBACK_THREAD = None
 CURRENT_KIT = "808"
 BASSLINE_FILTER_FREQ = 880.0
 SLIDE_AMT = 0.1
+SAMPLES_PATH = os.path.join(current_dir, "samples/") # Modify "samples/" to your samples folder relative path
 
 
 class Instrument:
-    def __init__(self, label, sound, level):
+    def __init__(self, label, sound, level, file_name=None):  # Add file_name parameter
         self.label = label
         self.sound = sound
         self.level = level
+        self.file_name = file_name  # Add file_name attribute
 
+    def load_sound(self):
+        if self.file_name is not None:
+            self.sound = load_sample(os.path.join(SAMPLES_PATH, self.file_name))
 
 def generate_sound(freq, decay_factor, length, noise=False):
     x = np.arange(length)
@@ -116,6 +126,22 @@ def generate_piano_chord(root_freq, decay_factor, length):
     decay = np.exp(-decay_factor * np.arange(length))
     return (chord * decay).astype(np.float32)
 
+def get_instruments():
+    if CURRENT_KIT == "808":
+        return INSTRUMENTS_808
+    elif CURRENT_KIT == "909":
+        return INSTRUMENTS_909
+    elif CURRENT_KIT == "SMP":
+        return INSTRUMENTS_SMP
+
+def load_sample(file_path):
+    try:
+        data, _ = librosa.load(file_path, sr=FS)
+        return data
+    except Exception:
+        # print(f"Failed to load sample: {file_path}")
+        return np.zeros(int(FS * BPMFRAME), dtype=np.float32)  # return an array of zeros
+
 
 KICK_808 = generate_kick_sound(65.0, 50.0, 0.0003, int(FS * 0.4))
 SNARE_808 = generate_sound(180.0, 0.0015, int(FS * BPMFRAME))
@@ -178,6 +204,21 @@ INSTRUMENTS_909 = [
     Instrument("♪ PA", None, 0.8),
 ]
 
+INSTRUMENTS_SMP = [
+    Instrument("⦿ BD", None, 0.8, "bd.wav"),
+    Instrument("◼ SD", None, 1.0, "sd.wav"),
+    Instrument("⚆ LT", None, 0.8, "lt.wav"),
+    Instrument("⚇ MT", None, 0.7, "mt.wav"),
+    Instrument("⚈ HT", None, 0.9, "ht.wav"),
+    Instrument("॥ CP", None, 0.6, "cp.wav"),
+    Instrument("Ⓚ CB", None, 1.0, "cb.wav"),
+    Instrument("⨂ HH", None, 1.0, "hh.wav"),
+    Instrument("⨁ OH", None, 1.0, "oh.wav"),
+    Instrument("♩ BL", None, 0.2),
+    Instrument("♪ PA", None, 0.8),
+]
+for inst in INSTRUMENTS_SMP:
+    inst.load_sound()
 
 stdscr = curses.initscr()
 curses.noecho()
@@ -242,8 +283,7 @@ piano_freqs = [262, 330, 440]  # frequencies for C4, E4, A4 notes
 def update_sequence():
     dump_sequence()
     global COMPLETE_SEQUENCE, instruments
-    instruments = INSTRUMENTS_808 if CURRENT_KIT == "808" else INSTRUMENTS_909
-
+    instruments = get_instruments()
     sequences = []
     for j in range(len(instruments)):
         if INSTRUMENT_MUTE_STATUS.get(j, False):
@@ -344,8 +384,8 @@ try:
             f'''Move with (arrows), press (space) to toggle a step, (x) to clear the pattern, (q) to quit.
 (1/2): Toggle 16 or 32 steps
 ⇧/(-/=) BPM: {BPM}
-⇧/(5/6/0) Swing: {SWING}%
-(8/9): Selected Kit: {CURRENT_KIT}
+⇧/(5/6) Swing: {SWING}%
+(8): Selected Kit: {CURRENT_KIT}
 (s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
 (f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}
 (o/p): Slide Amount: {SLIDE_AMT * 100}%
@@ -400,9 +440,22 @@ Master level: {MASTER_LEVEL}
                     + {"x": "o", "o": "x"}[GRID[CURSOR[0]][CURSOR[1]]]
                     + GRID[CURSOR[0]][CURSOR[1] + 1:]
                 )
-        elif c in (ord("8"), ord("9")):
-            CURRENT_KIT = {ord("8"): "808", ord("9"): "909"}[c]
-            instruments = INSTRUMENTS_808 if CURRENT_KIT == "808" else INSTRUMENTS_909
+        elif c == ord("8"):
+            if CURRENT_KIT == "808":
+                CURRENT_KIT = "909"
+            elif CURRENT_KIT == "909":
+                CURRENT_KIT = "SMP"
+                # Reload the samples every time you switch to the "SMP" kit
+                for inst in INSTRUMENTS_SMP:
+                    inst.load_sound()  # Use the load_sound method
+            else:
+                CURRENT_KIT = "808"
+            if CURRENT_KIT == "808":
+                instruments = INSTRUMENTS_808
+            elif CURRENT_KIT == "909":
+                instruments = INSTRUMENTS_909
+            elif CURRENT_KIT == "SMP":
+                instruments = INSTRUMENTS_SMP
         elif c == ord("0") or c == ord(")"):  # handle shift for resetting
             SWING = 50
         elif c == ord("5"):
@@ -435,6 +488,9 @@ Master level: {MASTER_LEVEL}
             BASSLINE_FILTER_FREQ /= 2
         elif c == ord("x"):
             GRID = ["x" * STEP_COUNT for _ in range(len(instruments))]
+        elif c == ord("z"):
+            GRID[CURSOR[0]] = "x" * STEP_COUNT
+
         elif c == ord("m"):  # Mute/unmute the current track
             if instruments[CURSOR[0]].level == 0.0:
                 INSTRUMENT_MUTE_STATUS[CURSOR[0]] = False  # Unmute the track
