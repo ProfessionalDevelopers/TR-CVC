@@ -326,7 +326,7 @@ while True:
     stdscr.addstr(
         len(GRID) + 2,
         0,
-        f'Move with (arrows), press (space) \nto toggle a step, (x) to clear the \npattern\n\n⇧/(-/=) BPM: {BPM}\n⇧/(5/6/0) Swing: {SWING}%\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(#/#): Slide Amount: {SLIDE_AMT * 100}%\n(f/g): Bassline Filter Cutoff: {BASSLINE_FILTER_FREQ}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}',
+        f'Move with (arrows), press (space) \nto toggle a step, (x) to clear the \npattern\n\n⇧/(-/=) BPM: {BPM}\n⇧/(5/6/0) Swing: {SWING}%\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f/g): Bassline Filter Cutoff: {BASSLINE_FILTER_FREQ}\n(o/p): Slide Amount: {SLIDE_AMT * 100}%\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}',
     )
 
     stdscr.move(
