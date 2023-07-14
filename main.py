@@ -169,15 +169,24 @@ def update_sequence():
     instruments = INSTRUMENTS_808 if CURRENT_KIT == '808' else INSTRUMENTS_909
 
     for i in range(16):
-        start_index = int(i * FS * BPMFRAME * (1 + SWING)) if SWING and i % 2 else i * int(FS * BPMFRAME)
-        end_indices = [start_index + inst.sound.size if inst.sound is not None else start_index for inst in instruments]
-        end_indices.append(start_index + int(FS * BPMFRAME))
-
         for j in range(len(instruments)):
+            if SWING and i % 2:
+                # Calculate the time for one 8th note
+                eighth_note_time = 2 * FS * BPMFRAME
+                # Calculate the time for the second 16th note within the 8th note
+                second_sixteenth_note_time = eighth_note_time * SWING / 100
+                # Calculate the start index for the second 16th note
+                start_index = min(int((i - 1) * FS * BPMFRAME + second_sixteenth_note_time), sequences[j].size - 1)
+            else:
+                start_index = min(int(i * FS * BPMFRAME), sequences[j].size - 1)
+
+            end_indices = [start_index + inst.sound.size if inst.sound is not None else start_index for inst in instruments]
+            end_indices.append(start_index + int(FS * BPMFRAME))
+
             if GRID[j][i] != 'x' and instruments[j].sound is not None:
                 sound = instruments[j].sound * instruments[j].level
                 sequences[j][start_index:min(end_indices[j], sequences[j].size)] += sound[:min(end_indices[j], sequences[j].size) - start_index]
-
+        
         # Handle the bassline and piano lines separately
         for j in [-2, -1]:  # the last two lines are the 'BA' and 'PA' lines
             min_index = min(end_indices[j], sequences[j].size)
@@ -211,7 +220,7 @@ while True:
         stdscr.addstr(i, 0, f'{instruments[i].label} {instruments[i].level:.2f}: {row_str}')
         
     stdscr.addstr(len(GRID)+1, 0, '\n')  # Add a blank line between the sequencer and the status
-    stdscr.addstr(len(GRID)+2, 0, f'⇧/(-/=) BPM: {BPM}\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f): Bassline Filter Cutoff: {BASSLINE_FILTER_CUTOFF}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}')
+    stdscr.addstr(len(GRID)+2, 0, f'⇧/(-/=) BPM: {BPM}\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f): Bassline Filter Cutoff: {BASSLINE_FILTER_CUTOFF}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}\nSwing: {SWING}%')
     
     stdscr.move(CURSOR[0], CURSOR[1] // 4 * 5 + CURSOR[1] % 4 + len(instruments[CURSOR[0]].label) + 7)
     stdscr.refresh()
@@ -236,12 +245,12 @@ while True:
     elif c in (ord('8'), ord('9')):
         CURRENT_KIT = {ord('8'): '808', ord('9'): '909'}[c]
         instruments = INSTRUMENTS_808 if CURRENT_KIT == '808' else INSTRUMENTS_909  # Add this line
-    # elif c == ord('0'):
-    #     SWING = 0
-    # elif c == ord('5'):
-    #     SWING = 0.5
-    # elif c == ord('6'):
-    #     SWING = 0.6
+    elif c == ord('0'):
+        SWING = 50
+    elif c == ord('5'):
+        SWING = 55
+    elif c == ord('6'):
+        SWING = 60
     elif c == ord('-'):
         BPM = max(BPM - 5, 1)  # BPM cannot go below 1
         BPMFRAME = (60/BPM)/4
