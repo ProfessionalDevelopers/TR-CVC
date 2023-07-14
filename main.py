@@ -20,11 +20,10 @@ BPM = 120.0
 BPMFRAME = (60 / BPM) / 4
 SEQUENCE_FILE = "sequence.json"  # the file where we'll save and load the sequence
 MASTER_LEVEL = 0.8  # master level
-GRID = [
-    "x" * 16 for _ in range(11)
-]  # add extra rows for the bassline, mid tom and clap
+STEP_COUNT = 16  # add this line
+GRID = ["x" * STEP_COUNT for _ in range(11)]
 CURSOR = [0, 0]
-COMPLETE_SEQUENCE = np.zeros(16 * int(FS * BPMFRAME), dtype=np.float32)
+COMPLETE_SEQUENCE = np.zeros(STEP_COUNT * int(FS * BPMFRAME), dtype=np.float32)
 SWING = 50
 PLAYBACK_THREAD = None
 CURRENT_KIT = "808"
@@ -238,6 +237,7 @@ if os.path.exists(SEQUENCE_FILE):
         BPM = state.get("bpm", 120.0)
         BASSLINE_FILTER_FREQ = state.get("bassline_freq", 880.0)
         SLIDE_AMT = state.get("slide_amt", 0.1)
+        STEP_COUNT = state.get("step_count", 16)  # load step count from file
         # Only update the mute status if it exists in the loaded state
         if "mute_status" in state:
             INSTRUMENT_MUTE_STATUS = {
@@ -268,6 +268,8 @@ def dump_sequence():
                 "bassline_freq": BASSLINE_FILTER_FREQ,
                 "mute_status": INSTRUMENT_MUTE_STATUS,  # Add the mute status to the saved state
                 "slide_amt": SLIDE_AMT,
+                "step_count": STEP_COUNT,  # add step count to the saved state
+
             },
             f,
         )
@@ -288,8 +290,10 @@ def update_sequence():
             # If instrument is muted, skip this iteration
             continue
 
-        instrument_sequence = np.zeros(16 * int(FS * BPMFRAME), dtype=np.float32)
-        for i in range(16):
+        instrument_sequence = np.zeros(
+            STEP_COUNT * int(FS * BPMFRAME), dtype=np.float32
+        )
+        for i in range(STEP_COUNT):
             # Start index is shifted forward by a certain amount for even steps
             swing_shift = ((FS * BPMFRAME) * (SWING - 50) / 100) if i % 2 == 1 else 0
             start_index = min(
@@ -307,8 +311,8 @@ def update_sequence():
 
     # Handle the bassline and piano lines separately
     for j in [-2, -1]:  # the last two lines are the 'BL' and 'PA' lines
-        bassline_sequence = np.zeros(16 * int(FS * BPMFRAME), dtype=np.float32)
-        for i in range(16):
+        bassline_sequence = np.zeros(STEP_COUNT * int(FS * BPMFRAME), dtype=np.float32)
+        for i in range(STEP_COUNT):
             # Start index is shifted forward by a certain amount for even steps
             swing_shift = ((FS * BPMFRAME) * (SWING - 50) / 100) if i % 2 == 1 else 0
             start_index = min(
@@ -359,9 +363,14 @@ def playback_function():
 
 
 try:
-    while not IS_EXITING:
+    while True:
+
+        stdscr.clear()
+
         for i, row in enumerate(GRID):
-            row_str = " ".join(row[j: j + 4] for j in range(0, len(row), 4))
+            row_str = " ".join(
+                row[j: j + 4] for j in range(0, STEP_COUNT, 4)
+            )  # Update here
             stdscr.addstr(
                 i, 0, f"{instruments[i].label} {instruments[i].level:.2f}: {row_str}"
             )
@@ -372,8 +381,18 @@ try:
         stdscr.addstr(
             len(GRID) + 1,
             0,
-            f'Move with (arrows), press (space) to toggle a step, (x) to clear the pattern\n\n⇧/(-/=) BPM: {BPM}\n⇧/(5/6/0) Swing: {SWING}%\n(8): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}\n(o/p): Slide Amount: {SLIDE_AMT * 100}%\n(m): Mute/Unmute Track\n\n(q) to quit',
+            f'''Move with (arrows), press (space) to toggle a step, (x) to clear the pattern, (q) to quit.
+(1/2): Toggle 16 or 32 steps
+⇧/(-/=) BPM: {BPM}
+⇧/(5/6) Swing: {SWING}%
+(8): Selected Kit: {CURRENT_KIT}
+(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
+(f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}
+(o/p): Slide Amount: {SLIDE_AMT * 100}%
+(m): Mute/Unmute Track
 
+Master level: {MASTER_LEVEL}
+'''
         )
 
         stdscr.move(
@@ -391,8 +410,19 @@ try:
             CURSOR[0] += 1
         elif c == curses.KEY_LEFT and CURSOR[1] > 0:
             CURSOR[1] -= 1
-        elif c == curses.KEY_RIGHT and CURSOR[1] < 15:
+        elif (
+            c == curses.KEY_RIGHT and CURSOR[1] < STEP_COUNT - 1
+        ):  # use STEP_COUNT instead of 15
             CURSOR[1] += 1
+        elif c == ord("1"):
+            STEP_COUNT = 16
+            GRID = [row[:STEP_COUNT]
+                    for row in GRID]  # truncate each row to 16 steps
+            if CURSOR[1] >= STEP_COUNT:  # if cursor is beyond the new step count
+                CURSOR[1] = STEP_COUNT - 1  # move cursor to the last step
+        elif c == ord("2"):
+            STEP_COUNT = 32
+            GRID = [row + row for row in GRID]  # duplicate each row
         elif c == ord(" "):
             if CURSOR[0] in [
                 len(instruments) - 2,
@@ -457,9 +487,10 @@ try:
         elif c == ord("f"):
             BASSLINE_FILTER_FREQ /= 2
         elif c == ord("x"):
-            GRID = ["x" * 16 for _ in range(len(instruments))]
+            GRID = ["x" * STEP_COUNT for _ in range(len(instruments))]
         elif c == ord("z"):
             GRID[CURSOR[0]] = "x" * STEP_COUNT
+
         elif c == ord("m"):  # Mute/unmute the current track
             if instruments[CURSOR[0]].level == 0.0:
                 INSTRUMENT_MUTE_STATUS[CURSOR[0]] = False  # Unmute the track
