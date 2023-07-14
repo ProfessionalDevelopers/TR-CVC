@@ -20,9 +20,8 @@ https://github.com/ProfessionalDevelopers/TR-CVC/assets/1034155/59721b06-78c2-44
 - Per-channel mute and un-mutes
 - Configurable per-instrument mixer levels
 - Adjustable tempo: -/= for jumps of 5, hold shift for single beat increments 
+- Swing (use keys 5, 6, and 0 to reset)
 - Automatic saving and restoration of sequences
 
 #TODO
-- Adjustable BPM
-- Swing
 - FX?
