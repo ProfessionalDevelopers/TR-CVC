@@ -122,29 +122,29 @@ CLAP_909 = generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)  # example s
 # Replace the PIANO_SOUND variable with the new chord sound
 PIANO_SOUND = generate_piano_chord(440.0, 0.001, int(FS * BPMFRAME))  # A major 7th chord
 
-INSTRUMENTS_808 = [Instrument('BD', KICK_808, 0.8), 
-                    Instrument('SD', SNARE_808, 1.0), 
-                    Instrument('LT', LOW_TOM_808, 0.8), 
-                    Instrument('MT', MID_TOM_808, 0.7), 
-                    Instrument('HT', HIGH_TOM_808, 0.9), 
-                    Instrument('CP', CLAP_808, 0.6), 
-                    Instrument('CB', COWBELL_808, 1.0),
-                    Instrument('HH', HIHAT_808, 1.0),
-                    Instrument('OH', OPEN_HIHAT_808, 1.0), 
-                    Instrument('BL', None, 0.2), 
-                    Instrument('PA', PIANO_SOUND, 0.8)]
+INSTRUMENTS_808 = [ Instrument('⦿ BD', KICK_808, 0.8), 
+                    Instrument('◼ SD', SNARE_808, 1.0), 
+                    Instrument('⚆ LT', LOW_TOM_808, 0.8), 
+                    Instrument('⚇ MT', MID_TOM_808, 0.7), 
+                    Instrument('⚈ HT', HIGH_TOM_808, 0.9), 
+                    Instrument('॥ CP', CLAP_808, 0.6), 
+                    Instrument('Ⓚ CB', COWBELL_808, 1.0),
+                    Instrument('⨂ HH', HIHAT_808, 1.0),
+                    Instrument('⨁ OH', OPEN_HIHAT_808, 1.0), 
+                    Instrument('♩ BL', None, 0.2), 
+                    Instrument('♪ PA', PIANO_SOUND, 0.8)]
 
-INSTRUMENTS_909 = [Instrument('BD', KICK_909, 0.8), 
-                   Instrument('SD', SNARE_909, 1.0), 
-                   Instrument('LT', LOW_TOM_909, 0.8), 
-                   Instrument('MT', MID_TOM_909, 0.7), 
-                   Instrument('HT', HIGH_TOM_909, 0.9),
-                   Instrument('CP', CLAP_909, 0.6),  
-                   Instrument('CB', COWBELL_909, 1.0),
-                   Instrument('HH', HIHAT_909, 1.0),
-                   Instrument('OH', OPEN_HIHAT_909, 1.0), 
-                   Instrument('BL', None, 0.2), 
-                   Instrument('PA', PIANO_SOUND, 0.8)]
+INSTRUMENTS_909 = [Instrument('⦿ BD',  KICK_909, 0.8), 
+                   Instrument('◼ SD',  SNARE_909, 1.0), 
+                   Instrument('⚆ LT', LOW_TOM_909, 0.8), 
+                   Instrument('⚇ MT', MID_TOM_909, 0.7), 
+                   Instrument('⚈ HT', HIGH_TOM_909, 0.9),
+                   Instrument('॥ CP',  CLAP_909, 0.6),  
+                   Instrument('Ⓚ CB',  COWBELL_909, 1.0),
+                   Instrument('⨂ HH',  HIHAT_909, 1.0),
+                   Instrument('⨁ OH',  OPEN_HIHAT_909, 1.0), 
+                   Instrument('♩ BL', None, 0.2), 
+                   Instrument('♪ PA', PIANO_SOUND, 0.8)]
 
 stdscr = curses.initscr()
 curses.noecho()
