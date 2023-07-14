@@ -8,7 +8,7 @@ The goal was to build a drum machine with reatlime editing capabilities, combine
 
 Video and sound examples:
 
-https://github.com/ProfessionalDevelopers/TR-CVC/assets/1034155/59721b06-78c2-44bd-ae2a-881506157d4d
+https://github.com/ProfessionalDevelopers/TR-CVC/assets/1034155/1e1cb11a-2c46-49c6-a75b-2a59f77cc64f
 
 # Features:
 - Simple 16-step sequencer: press space to toggle a step, and on bass and piano lines, repeat it to choose a different note.
