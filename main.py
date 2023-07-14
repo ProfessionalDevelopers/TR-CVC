@@ -186,7 +186,10 @@ def update_sequence():
     for j in [-2, -1]:  # the last two lines are the 'BL' and 'PA' lines
         bassline_sequence = np.zeros(16 * int(FS * BPMFRAME), dtype=np.float32)
         for i in range(16):
-            start_index = min(int(i * FS * BPMFRAME), bassline_sequence.size - 1)
+            # Start index is shifted forward by a certain amount for even steps
+            swing_shift = ((FS * BPMFRAME) * (SWING - 50) / 100) if i % 2 == 1 else 0
+            start_index = min(int(i * FS * BPMFRAME + swing_shift), bassline_sequence.size - 1)
+
             if GRID[j][i] in 'oup':
                 freqs = bassline_freqs if j == -2 else piano_freqs
                 if j == -2:  # if it's the 'BL' line
@@ -197,6 +200,7 @@ def update_sequence():
                 end_index = min(start_index + sound.size, bassline_sequence.size)
                 bassline_sequence[start_index:end_index] += sound[:end_index - start_index]
         sequences.append(bassline_sequence)
+
 
     COMPLETE_SEQUENCE = sum(sequences) * MASTER_LEVEL
 
