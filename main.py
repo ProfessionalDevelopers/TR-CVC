@@ -102,10 +102,10 @@ SNARE_808 += generate_sound(0, 0.0015, int(FS * BPMFRAME), noise=True)
 HIHAT_808 = bandpass_filter(generate_sound(0, 0.005, int(FS * 0.5), noise=True), 7000, 9000, FS)
 OPEN_HIHAT_808 = bandpass_filter(generate_sound(0, 0.001, int(FS * 1.4), noise=True), 7000, 9000, FS)
 COWBELL_808 = generate_sound(380.0, 0.002, int(FS * BPMFRAME))
-HIGH_TOM_808 = generate_kick_sound(300.0, 150.0, 0.0005, int(FS * 0.2))
-LOW_TOM_808 = generate_kick_sound(200.0, 75.0, 0.0005, int(FS * 0.2))
-MID_TOM_808 = generate_kick_sound(250.0, 100.0, 0.0005, int(FS * 0.2))  # example sound
-CLAP_808 = generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)  # example sound
+HIGH_TOM_909 = generate_kick_sound(350.0, 150.0, 0.0005, int(FS * 0.2))
+MID_TOM_909 = generate_kick_sound(300.0, 125.0, 0.0005, int(FS * 0.2))  
+LOW_TOM_909 = generate_kick_sound(200.0, 100.0, 0.0005, int(FS * 0.2))
+CLAP_808 = generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)  
 
 KICK_909 = generate_kick_sound(150.0, 30.0, 0.0002, int(FS * 0.5))  # longer and boomy
 SNARE_909 = generate_sound(220.0, 0.001, int(FS * BPMFRAME))
@@ -113,14 +113,13 @@ SNARE_909 += generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)
 HIHAT_909 = bandpass_filter(generate_sound(0, 0.0025, int(FS * 0.5), noise=True), 7000, 9000, FS)
 OPEN_HIHAT_909 = bandpass_filter(generate_sound(100, 0.0005, int(FS * 1.4), noise=True), 6000, 9000, FS)
 COWBELL_909 = generate_sound(480.0, 0.001, int(FS * 0.075))
-HIGH_TOM_909 = generate_kick_sound(300.0, 150.0, 0.0005, int(FS * 0.2))
-LOW_TOM_909 = generate_kick_sound(200.0, 75.0, 0.0005, int(FS * 0.2))
-MID_TOM_909 = generate_kick_sound(250.0, 100.0, 0.0005, int(FS * 0.2))  # example sound
-CLAP_909 = generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)  # example sound
+HIGH_TOM_909 = generate_kick_sound(350.0, 150.0, 0.0005, int(FS * 0.2))
+MID_TOM_909 = generate_kick_sound(300.0, 125.0, 0.0005, int(FS * 0.2))  
+LOW_TOM_909 = generate_kick_sound(200.0, 100.0, 0.0005, int(FS * 0.2))
+CLAP_909 = generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)  
 
 # PIANO_SOUND = generate_piano_sound(440.0, 0.001, int(FS * BPMFRAME))  # A4 note
-# Replace the PIANO_SOUND variable with the new chord sound
-# PIANO_SOUND = generate_piano_chord(440.0, 0.001, int(FS * BPMFRAME))  # A major 7th chord
+
 
 INSTRUMENTS_808 = [ Instrument('⦿ BD', KICK_808, 0.8), 
                     Instrument('◼ SD', SNARE_808, 1.0), 
@@ -171,8 +170,8 @@ def dump_sequence():
             'grid': GRID, 
             'swing': SWING, 
             'current_kit': CURRENT_KIT, 
-            'bpm': BPM,  # Add this line
-            'bassline_freq_index': BASSLINE_FILTER_INDEX  # Add this line
+            'bpm': BPM,  
+            'bassline_freq_index': BASSLINE_FILTER_INDEX  
         }, f)
 
 # Define frequencies for 'o', 'u', 'p' for the bassline and piano
@@ -264,7 +263,7 @@ while True:
         CURRENT_KIT = {ord('8'): '808', ord('9'): '909'}[c]
     elif c in (ord('8'), ord('9')):
         CURRENT_KIT = {ord('8'): '808', ord('9'): '909'}[c]
-        instruments = INSTRUMENTS_808 if CURRENT_KIT == '808' else INSTRUMENTS_909  # Add this line
+        instruments = INSTRUMENTS_808 if CURRENT_KIT == '808' else INSTRUMENTS_909  
     elif c == ord('0'):
         SWING = 50
     elif c == ord('5'):
