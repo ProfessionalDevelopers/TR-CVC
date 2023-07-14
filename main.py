@@ -1,25 +1,29 @@
-import curses
-import json
-import os
-import threading
 import numpy as np
 from scipy import signal
+from scipy.signal import butter, lfilter
 import sounddevice as sd
+import curses
+import threading
+import random
+import json
+import os
 
-FS = 44100  
+FS = 44100  # sample rate 
 BPM = 120.0
 BPMFRAME = (60/BPM)/4
-SEQUENCE_FILE = 'sequence.json'  
-MASTER_LEVEL = 0.8  
-GRID = ['x'*16 for _ in range(11)]  
+SEQUENCE_FILE = 'sequence.json'  # the file where we'll save and load the sequence
+MASTER_LEVEL = 0.8  # master level
+GRID = ['x'*16 for _ in range(11)]  # add extra rows for the bassline, mid tom and clap
 CURSOR = [0, 0]
 COMPLETE_SEQUENCE = np.zeros(16 * int(FS * BPMFRAME), dtype=np.float32)
 SWING = 0
 PLAYBACK_THREAD = None
 CURRENT_KIT = "808"
-BASSLINE_FILTER_FREQS = [110.0, 220.0, 440.0, 880.0, 1760.0] 
-BASSLINE_FILTER_INDEX = 0  
-BASSLINE_FILTER_DIRECTION = 1  
+BASSLINE_FILTER_FREQS = [110.0, 220.0, 440.0, 880.0, 1760.0, 3520.0, 7040.0, 14080.0]  # Low-pass filter frequencies for bassline
+BASSLINE_FILTER_INDEX = 0  # Index for the current filter frequency
+BASSLINE_FILTER_DIRECTION = 1  # 1 for increasing, -1 for decreasing
+
+
 
 class Instrument:
     def __init__(self, label, sound, level):
@@ -27,14 +31,15 @@ class Instrument:
         self.sound = sound
         self.level = level
 
-def generate_sound(freq, decay_factor, length, noise=False, end_freq=None):
+def generate_sound(freq, decay_factor, length, noise=False):
     x = np.arange(length)
-    if noise:
-        y = np.random.normal(0, 1, length)
-    elif end_freq:
-        y = np.sin(2 * np.pi * freq * np.exp(np.log(end_freq/freq)*x/length) * x / FS)
-    else:
-        y = np.sin(2 * np.pi * freq * x / FS)
+    y = np.random.normal(0, 1, length) if noise else np.sin(2 * np.pi * freq * x / FS)
+    decay = np.exp(-decay_factor * x)
+    return (y * decay).astype(np.float32)
+
+def generate_kick_sound(start_freq, end_freq, decay_factor, length):
+    x = np.arange(length)
+    y = np.sin(2 * np.pi * start_freq * np.exp(np.log(end_freq/start_freq)*x/length) * x / FS)
     decay = np.exp(-decay_factor * x)
     return (y * decay).astype(np.float32)
 
@@ -42,60 +47,71 @@ def bandpass_filter(data, lowcut, highcut, fs, order=5):
     nyquist = 0.5 * fs
     low = lowcut / nyquist
     high = highcut / nyquist
-    b, a = signal.butter(order, [low, high], btype='band')
-    return signal.lfilter(b, a, data)
+    b, a = butter(order, [low, high], btype='band')
+    return lfilter(b, a, data)
 
 def lowpass_filter(data, cutoff, fs, order=5):
     nyquist = 0.5 * fs
     normal_cutoff = cutoff / nyquist
-    b, a = signal.butter(order, normal_cutoff, btype='low', analog=False)
-    y = signal.lfilter(b, a, data)
+    b, a = butter(order, normal_cutoff, btype='low', analog=False)
+    y = lfilter(b, a, data)
     return y
 
 def generate_acid_bassline(note_frequency, note_duration, slide_duration, resonance, distortion, fs=44100):
     t = np.arange(note_duration * fs)
-    bassline = signal.square(2 * np.pi * note_frequency * t / fs)
+    bassline = signal.square(2 * np.pi * note_frequency * t / fs)  # using square wave
+
     if slide_duration > 0:
         slide_frequencies = np.linspace(note_frequency, note_frequency * 2, int(fs * slide_duration))
         slide = signal.square(2 * np.pi * slide_frequencies * np.arange(len(slide_frequencies)) / fs)
         bassline[:len(slide)] = slide
+
     if resonance > 0:
         sos = signal.butter(10, note_frequency, 'hp', fs=fs, output='sos')
         bassline = signal.sosfilt(sos, bassline)
+
     if distortion > 0:
         bassline = np.clip(bassline, -distortion, distortion)
+
     return bassline
 
-def init_instruments(kick, snare, hihat, open_hihat, cowbell, high_tom, low_tom, mid_tom, clap, piano_sound):
-    return [Instrument('BD', kick, 0.8), Instrument('SD', snare, 1.0), Instrument('HH', hihat, 1.0),
-            Instrument('OH', open_hihat, 1.0), Instrument('CB', cowbell, 1.0), Instrument('HT', high_tom, 0.9),
-            Instrument('LT', low_tom, 0.8), Instrument('MT', mid_tom, 0.7), Instrument('CP', clap, 0.6), 
-            Instrument('BL', None, 0.2), Instrument('PA', piano_sound, 0.8)]
+def generate_piano_sound(freq, decay_factor, length):
+    x = np.arange(length)
+    y = np.sin(2 * np.pi * freq * x / FS)
+    decay = np.exp(-decay_factor * x)
+    return (y * decay).astype(np.float32)
 
-KICK_808 = generate_sound(65.0, 0.0003, int(FS * 0.4), end_freq=50.0)
-SNARE_808 = generate_sound(180.0, 0.0015, int(FS * BPMFRAME)) + generate_sound(0, 0.0015, int(FS * BPMFRAME), noise=True)
+KICK_808 = generate_kick_sound(65.0, 50.0, 0.0003, int(FS * 0.4))
+SNARE_808 = generate_sound(180.0, 0.0015, int(FS * BPMFRAME))
+SNARE_808 += generate_sound(0, 0.0015, int(FS * BPMFRAME), noise=True)
 HIHAT_808 = bandpass_filter(generate_sound(0, 0.005, int(FS * 0.5), noise=True), 7000, 9000, FS)
 OPEN_HIHAT_808 = bandpass_filter(generate_sound(0, 0.001, int(FS * 1.4), noise=True), 7000, 9000, FS)
 COWBELL_808 = generate_sound(380.0, 0.002, int(FS * BPMFRAME))
-HIGH_TOM_808 = generate_sound(300.0, 0.0005, int(FS * 0.2), end_freq=150.0)
-LOW_TOM_808 = generate_sound(200.0, 0.0005, int(FS * 0.2), end_freq=75.0)
-MID_TOM_808 = generate_sound(250.0, 0.0005, int(FS * 0.2), end_freq=100.0)
-CLAP_808 = generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)
+HIGH_TOM_808 = generate_kick_sound(300.0, 150.0, 0.0005, int(FS * 0.2))
+LOW_TOM_808 = generate_kick_sound(200.0, 75.0, 0.0005, int(FS * 0.2))
+MID_TOM_808 = generate_kick_sound(250.0, 100.0, 0.0005, int(FS * 0.2))  # example sound
+CLAP_808 = generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)  # example sound
 
-KICK_909 = generate_sound(150.0, 0.0002, int(FS * 0.5), end_freq=30.0)
-SNARE_909 = generate_sound(220.0, 0.001, int(FS * BPMFRAME)) + generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)
+KICK_909 = generate_kick_sound(150.0, 30.0, 0.0002, int(FS * 0.5))  # longer and boomy
+SNARE_909 = generate_sound(220.0, 0.001, int(FS * BPMFRAME))
+SNARE_909 += generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)
 HIHAT_909 = bandpass_filter(generate_sound(0, 0.0025, int(FS * 0.5), noise=True), 7000, 9000, FS)
 OPEN_HIHAT_909 = bandpass_filter(generate_sound(100, 0.0005, int(FS * 1.4), noise=True), 6000, 9000, FS)
 COWBELL_909 = generate_sound(480.0, 0.001, int(FS * 0.075))
-HIGH_TOM_909 = generate_sound(300.0, 0.0005, int(FS * 0.2), end_freq=150.0)
-LOW_TOM_909 = generate_sound(200.0, 0.0005, int(FS * 0.2), end_freq=75.0)
-MID_TOM_909 = generate_sound(250.0, 0.0005, int(FS * 0.2), end_freq=100.0)
-CLAP_909 = generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)
+HIGH_TOM_909 = generate_kick_sound(300.0, 150.0, 0.0005, int(FS * 0.2))
+LOW_TOM_909 = generate_kick_sound(200.0, 75.0, 0.0005, int(FS * 0.2))
+MID_TOM_909 = generate_kick_sound(250.0, 100.0, 0.0005, int(FS * 0.2))  # example sound
+CLAP_909 = generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)  # example sound
 
-PIANO_SOUND = generate_sound(440.0, 0.001, int(FS * BPMFRAME))
+PIANO_SOUND = generate_piano_sound(440.0, 0.001, int(FS * BPMFRAME))  # A4 note
 
-INSTRUMENTS_808 = init_instruments(KICK_808, SNARE_808, HIHAT_808, OPEN_HIHAT_808, COWBELL_808, HIGH_TOM_808, LOW_TOM_808, MID_TOM_808, CLAP_808, PIANO_SOUND)
-INSTRUMENTS_909 = init_instruments(KICK_909, SNARE_909, HIHAT_909, OPEN_HIHAT_909, COWBELL_909, HIGH_TOM_909, LOW_TOM_909, MID_TOM_909, CLAP_909, PIANO_SOUND)
+INSTRUMENTS_808 = [Instrument('BD', KICK_808, 0.8), Instrument('SD', SNARE_808, 1.0), Instrument('HH', HIHAT_808, 1.0),
+                   Instrument('OH', OPEN_HIHAT_808, 1.0), Instrument('CB', COWBELL_808, 1.0), Instrument('HT', HIGH_TOM_808, 0.9),
+                   Instrument('LT', LOW_TOM_808, 0.8), Instrument('MT', MID_TOM_808, 0.7), Instrument('CP', CLAP_808, 0.6), Instrument('BL', None, 0.2), Instrument('PA', PIANO_SOUND, 0.8)]
+
+INSTRUMENTS_909 = [Instrument('BD', KICK_909, 0.8), Instrument('SD', SNARE_909, 1.0), Instrument('HH', HIHAT_909, 1.0),
+                   Instrument('OH', OPEN_HIHAT_909, 1.0), Instrument('CB', COWBELL_909, 1.0), Instrument('HT', HIGH_TOM_909, 0.9),
+                   Instrument('LT', LOW_TOM_909, 0.8), Instrument('MT', MID_TOM_909, 0.7), Instrument('CP', CLAP_909, 0.6), Instrument('BL', None, 0.2), Instrument('PA', PIANO_SOUND, 0.8)]
 
 stdscr = curses.initscr()
 curses.noecho()
@@ -108,6 +124,8 @@ if os.path.exists(SEQUENCE_FILE):
         GRID = state['grid']
         SWING = state['swing']
         CURRENT_KIT = state['current_kit']
+        BASSLINE_FILTER_INDEX = state.get('bassline_freq_index', 0)  # Add this line
+
 
 instruments = INSTRUMENTS_808 if CURRENT_KIT == '808' else INSTRUMENTS_909
 ORIGINAL_LEVELS = {i: inst.level for i, inst in enumerate(instruments)}
@@ -115,7 +133,12 @@ BASSLINE_FILTER_CUTOFF = BASSLINE_FILTER_FREQS[BASSLINE_FILTER_INDEX]  # Initial
 
 def dump_sequence():
     with open(SEQUENCE_FILE, 'w') as f:
-        json.dump({'grid': GRID, 'swing': SWING, 'current_kit': CURRENT_KIT}, f)
+        json.dump({
+            'grid': GRID, 
+            'swing': SWING, 
+            'current_kit': CURRENT_KIT, 
+            'bassline_freq_index': BASSLINE_FILTER_INDEX  # Add this line
+        }, f)
 
 # Define frequencies for 'o', 'u', 'p' for the bassline and piano
 bassline_freqs = [55, 110, 220]
