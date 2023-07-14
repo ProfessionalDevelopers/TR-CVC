@@ -13,12 +13,12 @@ https://github.com/ProfessionalDevelopers/TR-CVC/assets/1034155/59721b06-78c2-44
 # Features:
 - Simple 16-step sequencer: press space to toggle a step, and on bass and piano lines, repeat it to choose a different note.
 - Bad approxmiations of classic roland 808 and 909 sounds: Bass Drum, Snare, Low- Mid- and High-Toms, Clap, Cowbell, Hihat and Open Hihat, all done in code, no samples.
-- A simplistic bassline sequencer allowing octave jumps of a square wav
-- Configurable highpass filter for the bass sequence
+- A simplistic bassline sequencer allowing octave jumps of a square wave
+- Configurable lowpass filter for the bass sequence
 - A ...piano(?) sound. Another sound.
 - Per-channel mute and un-mutes
-- Change kits while playing
-- Configurable per-instrument mixer levels per
+- Toggle between 808 and 909 kits while playing
+- Configurable per-instrument mixer levels
 - Automatic saving and restoration of sequences
 
 #TODO
