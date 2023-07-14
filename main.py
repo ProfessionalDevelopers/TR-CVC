@@ -321,6 +321,9 @@ def playback_function():
 
 try:
     while True:
+
+        stdscr.clear()
+
         for i, row in enumerate(GRID):
             row_str = " ".join(
                 row[j: j + 4] for j in range(0, STEP_COUNT, 4)
