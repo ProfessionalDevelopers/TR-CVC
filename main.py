@@ -275,7 +275,7 @@ def update_sequence():
                 if j == -2:  # if it's the 'BL' line
                     sound = (
                         generate_acid_bassline(
-                            freqs["oup".index(GRID[j][i])], BPMFRAME, 0, 90, 0
+                            freqs["oup".index(GRID[j][i])], BPMFRAME, 0.025, 90, 0
                         )
                         * instruments[j].level
                     )
