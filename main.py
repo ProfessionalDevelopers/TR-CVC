@@ -19,9 +19,10 @@ COMPLETE_SEQUENCE = np.zeros(16 * int(FS * BPMFRAME), dtype=np.float32)
 SWING = 50
 PLAYBACK_THREAD = None
 CURRENT_KIT = "808"
-BASSLINE_FILTER_FREQS = [110.0, 220.0, 440.0, 880.0, 1760.0, 3520.0, 7040.0, 14080.0]  # Low-pass filter frequencies for bassline
-BASSLINE_FILTER_INDEX = 0  # Index for the current filter frequency
-BASSLINE_FILTER_DIRECTION = 1  # 1 for increasing, -1 for decreasing
+BASSLINE_FILTER_FREQ = 880.0
+# BASSLINE_FILTER_FREQS = [110.0, 220.0, 440.0, 880.0, 1760.0, 3520.0, 7040.0, 14080.0]  # Low-pass filter frequencies for bassline
+# BASSLINE_FILTER_INDEX = 0  # Index for the current filter frequency
+# BASSLINE_FILTER_DIRECTION = 1  # 1 for increasing, -1 for decreasing
 
 
 
@@ -157,12 +158,11 @@ if os.path.exists(SEQUENCE_FILE):
         SWING = state['swing']
         CURRENT_KIT = state['current_kit']
         BPM = state.get('bpm', 120.0) 
-        BASSLINE_FILTER_INDEX = state.get('bassline_freq_index', 0)  
+        BASSLINE_FILTER_FREQ = state.get('bassline_freq', 880.0)  
     BPMFRAME = (60/BPM)/4 
 
 instruments = INSTRUMENTS_808 if CURRENT_KIT == '808' else INSTRUMENTS_909
 ORIGINAL_LEVELS = {i: inst.level for i, inst in enumerate(instruments)}
-BASSLINE_FILTER_CUTOFF = BASSLINE_FILTER_FREQS[BASSLINE_FILTER_INDEX]  # Initial filter cutoff frequency
 
 def dump_sequence():
     with open(SEQUENCE_FILE, 'w') as f:
@@ -171,7 +171,7 @@ def dump_sequence():
             'swing': SWING, 
             'current_kit': CURRENT_KIT, 
             'bpm': BPM,  
-            'bassline_freq_index': BASSLINE_FILTER_INDEX  
+            'bassline_freq': BASSLINE_FILTER_FREQ
         }, f)
 
 # Define frequencies for 'o', 'u', 'p' for the bassline and piano
@@ -210,7 +210,7 @@ def update_sequence():
                 freqs = bassline_freqs if j == -2 else piano_freqs
                 if j == -2:  # if it's the 'BL' line
                     sound = generate_acid_bassline(freqs['oup'.index(GRID[j][i])], BPMFRAME, 0, 90, 0) * instruments[j].level
-                    sound = lowpass_filter(sound, BASSLINE_FILTER_FREQS[BASSLINE_FILTER_INDEX], FS)  # Apply low-pass filter
+                    sound = lowpass_filter(sound, BASSLINE_FILTER_FREQ, FS)  # Apply low-pass filter
                 else:  # if it's the 'PA' line
                     sound = generate_piano_chord(freqs['oup'.index(GRID[j][i])], 0.001, int(FS * BPMFRAME)) * instruments[j].level
                 end_index = min(start_index + sound.size, bassline_sequence.size)
@@ -239,7 +239,7 @@ while True:
         stdscr.addstr(i, 0, f'{instruments[i].label} {instruments[i].level:.2f}: {row_str}')
         
     stdscr.addstr(len(GRID)+1, 0, '\n')  # Add a blank line between the sequencer and the status
-    stdscr.addstr(len(GRID)+2, 0, f'⇧/(-/=) BPM: {BPM}\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f): Bassline Filter Cutoff: {BASSLINE_FILTER_CUTOFF}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}\nSwing: {SWING}%')
+    stdscr.addstr(len(GRID)+2, 0, f'⇧/(-/=) BPM: {BPM}\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f/g): Bassline Filter Cutoff: {BASSLINE_FILTER_FREQ}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}\nSwing: {SWING}%')
     
     stdscr.move(CURSOR[0], CURSOR[1] // 4 * 5 + CURSOR[1] % 4 + len(instruments[CURSOR[0]].label) + 7)
     stdscr.refresh()
@@ -282,11 +282,15 @@ while True:
     elif c == ord('+'):
         BPM += 1
         BPMFRAME = (60/BPM)/4
+    elif c == ord('g'):
+        BASSLINE_FILTER_FREQ = min(BASSLINE_FILTER_FREQ * 2, 12800.0)
     elif c == ord('f'):
-        BASSLINE_FILTER_INDEX += BASSLINE_FILTER_DIRECTION
-        if BASSLINE_FILTER_INDEX == len(BASSLINE_FILTER_FREQS) - 1 or BASSLINE_FILTER_INDEX == 0:
-            BASSLINE_FILTER_DIRECTION *= -1
-        BASSLINE_FILTER_CUTOFF = BASSLINE_FILTER_FREQS[BASSLINE_FILTER_INDEX]
+        BASSLINE_FILTER_FREQ /= 2
+    # elif c == ord('f'):
+    #     BASSLINE_FILTER_INDEX += BASSLINE_FILTER_DIRECTION
+    #     if BASSLINE_FILTER_INDEX == len(BASSLINE_FILTER_FREQS) - 1 or BASSLINE_FILTER_INDEX == 0:
+    #         BASSLINE_FILTER_DIRECTION *= -1
+    #     BASSLINE_FILTER_CUTOFF = BASSLINE_FILTER_FREQS[BASSLINE_FILTER_INDEX]
     elif c == ord('x'):
         GRID = ['x'*16 for _ in range(len(instruments))]
     elif c == ord('m'):  # Mute/unmute the current track
