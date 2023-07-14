@@ -13,11 +13,10 @@ BPM = 120.0
 BPMFRAME = (60 / BPM) / 4
 SEQUENCE_FILE = "sequence.json"  # the file where we'll save and load the sequence
 MASTER_LEVEL = 0.8  # master level
-GRID = [
-    "x" * 16 for _ in range(11)
-]  # add extra rows for the bassline, mid tom and clap
+STEP_COUNT = 16  # add this line
+GRID = ["x" * STEP_COUNT for _ in range(11)]
 CURSOR = [0, 0]
-COMPLETE_SEQUENCE = np.zeros(16 * int(FS * BPMFRAME), dtype=np.float32)
+COMPLETE_SEQUENCE = np.zeros(STEP_COUNT * int(FS * BPMFRAME), dtype=np.float32)
 SWING = 50
 PLAYBACK_THREAD = None
 CURRENT_KIT = "808"
@@ -246,8 +245,10 @@ def update_sequence():
             # If instrument is muted, skip this iteration
             continue
 
-        instrument_sequence = np.zeros(16 * int(FS * BPMFRAME), dtype=np.float32)
-        for i in range(16):
+        instrument_sequence = np.zeros(
+            STEP_COUNT * int(FS * BPMFRAME), dtype=np.float32
+        )
+        for i in range(STEP_COUNT):
             # Start index is shifted forward by a certain amount for even steps
             swing_shift = ((FS * BPMFRAME) * (SWING - 50) / 100) if i % 2 == 1 else 0
             start_index = min(
@@ -265,8 +266,8 @@ def update_sequence():
 
     # Handle the bassline and piano lines separately
     for j in [-2, -1]:  # the last two lines are the 'BL' and 'PA' lines
-        bassline_sequence = np.zeros(16 * int(FS * BPMFRAME), dtype=np.float32)
-        for i in range(16):
+        bassline_sequence = np.zeros(STEP_COUNT * int(FS * BPMFRAME), dtype=np.float32)
+        for i in range(STEP_COUNT):
             # Start index is shifted forward by a certain amount for even steps
             swing_shift = ((FS * BPMFRAME) * (SWING - 50) / 100) if i % 2 == 1 else 0
             start_index = min(
@@ -315,7 +316,9 @@ def playback_function():
 
 while True:
     for i, row in enumerate(GRID):
-        row_str = " ".join(row[j : j + 4] for j in range(0, len(row), 4))
+        row_str = " ".join(
+            row[j : j + 4] for j in range(0, STEP_COUNT, 4)
+        )  # Update here
         stdscr.addstr(
             i, 0, f"{instruments[i].label} {instruments[i].level:.2f}: {row_str}"
         )
@@ -343,8 +346,20 @@ while True:
         CURSOR[0] += 1
     elif c == curses.KEY_LEFT and CURSOR[1] > 0:
         CURSOR[1] -= 1
-    elif c == curses.KEY_RIGHT and CURSOR[1] < 15:
+    elif (
+        c == curses.KEY_RIGHT and CURSOR[1] < STEP_COUNT - 1
+    ):  # use STEP_COUNT instead of 15
         CURSOR[1] += 1
+    elif c == ord("1"):
+        STEP_COUNT = 16
+        GRID = [row[:STEP_COUNT] for row in GRID]  # truncate each row to 16 steps
+        if CURSOR[1] >= STEP_COUNT:  # if cursor is beyond the new step count
+            CURSOR[1] = STEP_COUNT - 1  # move cursor to the last step
+    elif c == ord("2"):
+        STEP_COUNT = 32
+        GRID = [
+            row.ljust(STEP_COUNT, "x") for row in GRID
+        ]  # expand each row to 32 steps
     elif c == ord(" "):
         if CURSOR[0] in [
             len(instruments) - 2,
@@ -397,7 +412,7 @@ while True:
     elif c == ord("f"):
         BASSLINE_FILTER_FREQ /= 2
     elif c == ord("x"):
-        GRID = ["x" * 16 for _ in range(len(instruments))]
+        GRID = ["x" * STEP_COUNT for _ in range(len(instruments))]
     elif c == ord("m"):  # Mute/unmute the current track
         if instruments[CURSOR[0]].level == 0.0:
             INSTRUMENT_MUTE_STATUS[CURSOR[0]] = False  # Unmute the track
