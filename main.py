@@ -16,7 +16,7 @@ MASTER_LEVEL = 0.8  # master level
 GRID = ['x'*16 for _ in range(11)]  # add extra rows for the bassline, mid tom and clap
 CURSOR = [0, 0]
 COMPLETE_SEQUENCE = np.zeros(16 * int(FS * BPMFRAME), dtype=np.float32)
-SWING = 0
+SWING = 50
 PLAYBACK_THREAD = None
 CURRENT_KIT = "808"
 BASSLINE_FILTER_FREQS = [110.0, 220.0, 440.0, 880.0, 1760.0, 3520.0, 7040.0, 14080.0]  # Low-pass filter frequencies for bassline
