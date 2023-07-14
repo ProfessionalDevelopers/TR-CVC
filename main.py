@@ -120,7 +120,7 @@ CLAP_909 = generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)  # example s
 
 # PIANO_SOUND = generate_piano_sound(440.0, 0.001, int(FS * BPMFRAME))  # A4 note
 # Replace the PIANO_SOUND variable with the new chord sound
-PIANO_SOUND = generate_piano_chord(440.0, 0.001, int(FS * BPMFRAME))  # A major 7th chord
+# PIANO_SOUND = generate_piano_chord(440.0, 0.001, int(FS * BPMFRAME))  # A major 7th chord
 
 INSTRUMENTS_808 = [ Instrument('⦿ BD', KICK_808, 0.8), 
                     Instrument('◼ SD', SNARE_808, 1.0), 
@@ -132,19 +132,19 @@ INSTRUMENTS_808 = [ Instrument('⦿ BD', KICK_808, 0.8),
                     Instrument('⨂ HH', HIHAT_808, 1.0),
                     Instrument('⨁ OH', OPEN_HIHAT_808, 1.0), 
                     Instrument('♩ BL', None, 0.2), 
-                    Instrument('♪ PA', PIANO_SOUND, 0.8)]
+                    Instrument('♪ PA', None, 0.8)]
 
-INSTRUMENTS_909 = [Instrument('⦿ BD',  KICK_909, 0.8), 
-                   Instrument('◼ SD',  SNARE_909, 1.0), 
-                   Instrument('⚆ LT', LOW_TOM_909, 0.8), 
-                   Instrument('⚇ MT', MID_TOM_909, 0.7), 
-                   Instrument('⚈ HT', HIGH_TOM_909, 0.9),
-                   Instrument('॥ CP',  CLAP_909, 0.6),  
-                   Instrument('Ⓚ CB',  COWBELL_909, 1.0),
-                   Instrument('⨂ HH',  HIHAT_909, 1.0),
-                   Instrument('⨁ OH',  OPEN_HIHAT_909, 1.0), 
-                   Instrument('♩ BL', None, 0.2), 
-                   Instrument('♪ PA', PIANO_SOUND, 0.8)]
+INSTRUMENTS_909 = [Instrument('BD', KICK_909, 0.8), 
+                   Instrument('SD', SNARE_909, 1.0), 
+                   Instrument('LT', LOW_TOM_909, 0.8), 
+                   Instrument('MT', MID_TOM_909, 0.7), 
+                   Instrument('HT', HIGH_TOM_909, 0.9),
+                   Instrument('CP', CLAP_909, 0.6),  
+                   Instrument('CB', COWBELL_909, 1.0),
+                   Instrument('HH', HIHAT_909, 1.0),
+                   Instrument('OH', OPEN_HIHAT_909, 1.0), 
+                   Instrument('BL', None, 0.2), 
+                   Instrument('PA', None, 0.8)]
 
 stdscr = curses.initscr()
 curses.noecho()
@@ -177,7 +177,7 @@ def dump_sequence():
 
 # Define frequencies for 'o', 'u', 'p' for the bassline and piano
 bassline_freqs = [55, 110, 220]
-piano_freqs = [262, 330, 392]  # frequencies for C4, E4, G4 notes
+piano_freqs = [262, 330, 440]  # frequencies for C4, E4, A4 notes
 
 def update_sequence():
     dump_sequence()
@@ -213,7 +213,7 @@ def update_sequence():
                     sound = generate_acid_bassline(freqs['oup'.index(GRID[j][i])], BPMFRAME, 0, 90, 0) * instruments[j].level
                     sound = lowpass_filter(sound, BASSLINE_FILTER_FREQS[BASSLINE_FILTER_INDEX], FS)  # Apply low-pass filter
                 else:  # if it's the 'PA' line
-                    sound = generate_piano_sound(freqs['oup'.index(GRID[j][i])], 0.001, int(FS * BPMFRAME)) * instruments[j].level
+                    sound = generate_piano_chord(freqs['oup'.index(GRID[j][i])], 0.001, int(FS * BPMFRAME)) * instruments[j].level
                 end_index = min(start_index + sound.size, bassline_sequence.size)
                 bassline_sequence[start_index:end_index] += sound[:end_index - start_index]
         sequences.append(bassline_sequence)
