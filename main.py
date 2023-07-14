@@ -81,6 +81,21 @@ def generate_piano_sound(freq, decay_factor, length):
     decay = np.exp(-decay_factor * x)
     return (y * decay).astype(np.float32)
 
+def generate_piano_chord(root_freq, decay_factor, length):
+    major_third_freq = root_freq * 2**(4/12)
+    perfect_fifth_freq = root_freq * 2**(7/12)
+    major_seventh_freq = root_freq * 2**(11/12)
+
+    root_note = np.sin(2 * np.pi * root_freq * np.arange(length) / FS)
+    major_third = np.sin(2 * np.pi * major_third_freq * np.arange(length) / FS)
+    perfect_fifth = np.sin(2 * np.pi * perfect_fifth_freq * np.arange(length) / FS)
+    major_seventh = np.sin(2 * np.pi * major_seventh_freq * np.arange(length) / FS)
+
+    chord = root_note + major_third + perfect_fifth + major_seventh
+    decay = np.exp(-decay_factor * np.arange(length))
+    return (chord * decay).astype(np.float32)
+
+
 KICK_808 = generate_kick_sound(65.0, 50.0, 0.0003, int(FS * 0.4))
 SNARE_808 = generate_sound(180.0, 0.0015, int(FS * BPMFRAME))
 SNARE_808 += generate_sound(0, 0.0015, int(FS * BPMFRAME), noise=True)
@@ -103,7 +118,9 @@ LOW_TOM_909 = generate_kick_sound(200.0, 75.0, 0.0005, int(FS * 0.2))
 MID_TOM_909 = generate_kick_sound(250.0, 100.0, 0.0005, int(FS * 0.2))  # example sound
 CLAP_909 = generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)  # example sound
 
-PIANO_SOUND = generate_piano_sound(440.0, 0.001, int(FS * BPMFRAME))  # A4 note
+# PIANO_SOUND = generate_piano_sound(440.0, 0.001, int(FS * BPMFRAME))  # A4 note
+# Replace the PIANO_SOUND variable with the new chord sound
+PIANO_SOUND = generate_piano_chord(440.0, 0.001, int(FS * BPMFRAME))  # A major 7th chord
 
 INSTRUMENTS_808 = [Instrument('BD', KICK_808, 0.8), 
                     Instrument('SD', SNARE_808, 1.0), 

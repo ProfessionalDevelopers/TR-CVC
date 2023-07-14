@@ -16,7 +16,7 @@ https://github.com/ProfessionalDevelopers/TR-CVC/assets/1034155/59721b06-78c2-44
 - A simplistic bassline sequencer allowing octave jumps of a square wave
 - Toggle between 808 and 909 kits while playing
 - Configurable lowpass filter for the bass sequence
-- A ...piano(?) sound. Another sound.
+- A ...piano(?) sound. Another sound. Plays some variation on Am7
 - Per-channel mute and un-mutes
 - Configurable per-instrument mixer levels
 - Adjustable tempo: -/= for jumps of 5, hold shift for single beat increments 
