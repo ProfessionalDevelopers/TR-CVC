@@ -176,10 +176,14 @@ INSTRUMENTS_909 = [
     Instrument("♪ PA", None, 0.8),
 ]
 
+
 stdscr = curses.initscr()
 curses.noecho()
 curses.cbreak()
 stdscr.keypad(True)
+
+INSTRUMENT_MUTE_STATUS = {i: False for i in range(len(INSTRUMENTS_808))}
+ORIGINAL_LEVELS = {i: inst.level for i, inst in enumerate(INSTRUMENTS_808)}
 
 if os.path.exists(SEQUENCE_FILE):
     with open(SEQUENCE_FILE) as f:
@@ -189,10 +193,23 @@ if os.path.exists(SEQUENCE_FILE):
         CURRENT_KIT = state["current_kit"]
         BPM = state.get("bpm", 120.0)
         BASSLINE_FILTER_FREQ = state.get("bassline_freq", 880.0)
+        # Only update the mute status if it exists in the loaded state
+        if "mute_status" in state:
+            INSTRUMENT_MUTE_STATUS = {
+                int(k): v for k, v in state["mute_status"].items()
+            }
+
+        for i, mute in INSTRUMENT_MUTE_STATUS.items():
+            if mute:
+                INSTRUMENTS_808[i].level = 0.0
+                INSTRUMENTS_909[i].level = 0.0
+            else:
+                INSTRUMENTS_808[i].level = ORIGINAL_LEVELS[i]
+                INSTRUMENTS_909[i].level = ORIGINAL_LEVELS[i]
     BPMFRAME = (60 / BPM) / 4
 
+
 instruments = INSTRUMENTS_808 if CURRENT_KIT == "808" else INSTRUMENTS_909
-ORIGINAL_LEVELS = {i: inst.level for i, inst in enumerate(instruments)}
 
 
 def dump_sequence():
@@ -204,6 +221,7 @@ def dump_sequence():
                 "current_kit": CURRENT_KIT,
                 "bpm": BPM,
                 "bassline_freq": BASSLINE_FILTER_FREQ,
+                "mute_status": INSTRUMENT_MUTE_STATUS,  # Add the mute status to the saved state
             },
             f,
         )
@@ -221,6 +239,10 @@ def update_sequence():
 
     sequences = []
     for j in range(len(instruments)):
+        if INSTRUMENT_MUTE_STATUS.get(j, False):
+            # If instrument is muted, skip this iteration
+            continue
+
         instrument_sequence = np.zeros(16 * int(FS * BPMFRAME), dtype=np.float32)
         for i in range(16):
             # Start index is shifted forward by a certain amount for even steps
@@ -297,7 +319,7 @@ while True:
     stdscr.addstr(
         len(GRID) + 2,
         0,
-        f'Move with (arrows), press (space) to toggle a step\n⇧/(-/=) BPM: {BPM}\n⇧/(5/6/0) Swing: {SWING}%\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f/g): Bassline Filter Cutoff: {BASSLINE_FILTER_FREQ}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}',
+        f'Move with (arrows), press (space) \nto toggle a step, (x) to clear the \npattern\n\n⇧/(-/=) BPM: {BPM}\n⇧/(5/6/0) Swing: {SWING}%\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f/g): Bassline Filter Cutoff: {BASSLINE_FILTER_FREQ}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}',
     )
 
     stdscr.move(
@@ -367,14 +389,18 @@ while True:
         GRID = ["x" * 16 for _ in range(len(instruments))]
     elif c == ord("m"):  # Mute/unmute the current track
         if instruments[CURSOR[0]].level == 0.0:
-            instruments[CURSOR[0]].level = ORIGINAL_LEVELS[
-                CURSOR[0]
-            ]  # Unmute the track
+            INSTRUMENT_MUTE_STATUS[CURSOR[0]] = False  # Unmute the track
+            instruments[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
+            INSTRUMENTS_808[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
+            INSTRUMENTS_909[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
         else:
+            INSTRUMENT_MUTE_STATUS[CURSOR[0]] = True  # Mute the track
             ORIGINAL_LEVELS[CURSOR[0]] = instruments[
                 CURSOR[0]
             ].level  # Save the current level
-            instruments[CURSOR[0]].level = 0.0  # Mute the track
+            instruments[CURSOR[0]].level = 0.0
+            INSTRUMENTS_808[CURSOR[0]].level = 0.0
+            INSTRUMENTS_909[CURSOR[0]].level = 0.0
     elif c == ord("s"):
         update_sequence()
         if PLAYBACK_THREAD is None:
