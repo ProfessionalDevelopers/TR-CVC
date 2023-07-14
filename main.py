@@ -140,8 +140,9 @@ if os.path.exists(SEQUENCE_FILE):
         GRID = state['grid']
         SWING = state['swing']
         CURRENT_KIT = state['current_kit']
-        BASSLINE_FILTER_INDEX = state.get('bassline_freq_index', 0)  # Add this line
-
+        BPM = state.get('bpm', 120.0) 
+        BASSLINE_FILTER_INDEX = state.get('bassline_freq_index', 0)  
+    BPMFRAME = (60/BPM)/4 
 
 instruments = INSTRUMENTS_808 if CURRENT_KIT == '808' else INSTRUMENTS_909
 ORIGINAL_LEVELS = {i: inst.level for i, inst in enumerate(instruments)}
@@ -153,6 +154,7 @@ def dump_sequence():
             'grid': GRID, 
             'swing': SWING, 
             'current_kit': CURRENT_KIT, 
+            'bpm': BPM,  # Add this line
             'bassline_freq_index': BASSLINE_FILTER_INDEX  # Add this line
         }, f)
 
@@ -209,8 +211,7 @@ while True:
         stdscr.addstr(i, 0, f'{instruments[i].label} {instruments[i].level:.2f}: {row_str}')
         
     stdscr.addstr(len(GRID)+1, 0, '\n')  # Add a blank line between the sequencer and the status
-    # stdscr.addstr(len(GRID)+2, 0, f'(8/9): Selected Kit: {CURRENT_KIT}\n(5/6/0): Swing: {SWING * 100:.0f}%\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f): Bassline Filter Cutoff: {BASSLINE_FILTER_CUTOFF}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}')
-    stdscr.addstr(len(GRID)+2, 0, f'(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f): Bassline Filter Cutoff: {BASSLINE_FILTER_CUTOFF}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}')
+    stdscr.addstr(len(GRID)+2, 0, f'⇧/(-/=) BPM: {BPM}\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f): Bassline Filter Cutoff: {BASSLINE_FILTER_CUTOFF}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}')
     
     stdscr.move(CURSOR[0], CURSOR[1] // 4 * 5 + CURSOR[1] % 4 + len(instruments[CURSOR[0]].label) + 7)
     stdscr.refresh()
@@ -241,6 +242,18 @@ while True:
     #     SWING = 0.5
     # elif c == ord('6'):
     #     SWING = 0.6
+    elif c == ord('-'):
+        BPM = max(BPM - 5, 1)  # BPM cannot go below 1
+        BPMFRAME = (60/BPM)/4
+    elif c == ord('='):
+        BPM += 5
+        BPMFRAME = (60/BPM)/4
+    elif c == ord('_'):
+        BPM = max(BPM - 1, 1)  # BPM cannot go below 1
+        BPMFRAME = (60/BPM)/4
+    elif c == ord('+'):
+        BPM += 1
+        BPMFRAME = (60/BPM)/4
     elif c == ord('f'):
         BASSLINE_FILTER_INDEX += BASSLINE_FILTER_DIRECTION
         if BASSLINE_FILTER_INDEX == len(BASSLINE_FILTER_FREQS) - 1 or BASSLINE_FILTER_INDEX == 0:

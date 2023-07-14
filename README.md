@@ -18,6 +18,7 @@ https://github.com/ProfessionalDevelopers/TR-CVC/assets/1034155/59721b06-78c2-44
 - A ...piano(?) sound. Another sound.
 - Per-channel mute and un-mutes
 - Change kits while playing
+- Adjustable tempo: -/= for jumps of 5, hold shift for single beat increments 
 - Configurable per-instrument mixer levels per
 - Automatic saving and restoration of sequences
 
