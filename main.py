@@ -409,7 +409,7 @@ try:
                     + {"x": "o", "o": "x"}[GRID[CURSOR[0]][CURSOR[1]]]
                     + GRID[CURSOR[0]][CURSOR[1] + 1:]
                 )
-        elif c in (ord("8"), ord("9")):
+        elif c == ord("8"):
             if CURRENT_KIT == "808":
                 CURRENT_KIT = "909"
             elif CURRENT_KIT == "909":
