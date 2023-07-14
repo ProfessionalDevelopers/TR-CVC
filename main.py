@@ -8,6 +8,8 @@ import random
 import json
 import os
 
+IS_EXITING = False
+
 FS = 44100  # sample rate
 BPM = 120.0
 BPMFRAME = (60 / BPM) / 4
@@ -310,130 +312,155 @@ def playback_function():
     global PLAYBACK_THREAD, instruments
     with sd.OutputStream(samplerate=FS, channels=1) as stream:
         while PLAYBACK_THREAD is not None:
+            if IS_EXITING:
+                stream.abort(True)
+                return
             update_sequence()
             stream.write(COMPLETE_SEQUENCE)
 
 
-while True:
-    for i, row in enumerate(GRID):
-        row_str = " ".join(
-            row[j : j + 4] for j in range(0, STEP_COUNT, 4)
-        )  # Update here
+try:
+    while True:
+        for i, row in enumerate(GRID):
+            row_str = " ".join(
+                row[j: j + 4] for j in range(0, STEP_COUNT, 4)
+            )  # Update here
+            stdscr.addstr(
+                i, 0, f"{instruments[i].label} {instruments[i].level:.2f}: {row_str}"
+            )
+
         stdscr.addstr(
-            i, 0, f"{instruments[i].label} {instruments[i].level:.2f}: {row_str}"
+            len(GRID) + 1, 0, "\n"
+        )  # Add a blank line between the sequencer and the status
+        stdscr.addstr(
+            len(GRID) + 1,
+            0,
+            f'''Move with (arrows), press (space) to toggle a step, (x) to clear the pattern, (q) to quit.
+
+⇧/(-/=) BPM: {BPM}
+⇧/(5/6/0) Swing: {SWING}%
+(8/9): Selected Kit: {CURRENT_KIT}
+(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
+(f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}
+(o/p): Slide Amount: {SLIDE_AMT * 100}%
+(m): Mute/Unmute Track
+
+Master level: {MASTER_LEVEL}
+'''
         )
 
-    stdscr.addstr(
-        len(GRID) + 1, 0, "\n"
-    )  # Add a blank line between the sequencer and the status
-    stdscr.addstr(
-        len(GRID) + 1,
-        0,
-        f'Move with (arrows), press (space) to toggle a step, (x) to clear the pattern\n\n⇧/(-/=) BPM: {BPM}\n⇧/(5/6/0) Swing: {SWING}%\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}\n(o/p): Slide Amount: {SLIDE_AMT * 100}%\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}',
-    )
+        stdscr.move(
+            CURSOR[0],
+            CURSOR[1] // 4 * 5 + CURSOR[1] % 4 +
+            len(instruments[CURSOR[0]].label) + 7,
+        )
+        stdscr.refresh()
 
-    stdscr.move(
-        CURSOR[0],
-        CURSOR[1] // 4 * 5 + CURSOR[1] % 4 + len(instruments[CURSOR[0]].label) + 7,
-    )
-    stdscr.refresh()
+        c = stdscr.getch()
 
-    c = stdscr.getch()
-
-    if c == curses.KEY_UP and CURSOR[0] > 0:
-        CURSOR[0] -= 1
-    elif c == curses.KEY_DOWN and CURSOR[0] < len(instruments) - 1:
-        CURSOR[0] += 1
-    elif c == curses.KEY_LEFT and CURSOR[1] > 0:
-        CURSOR[1] -= 1
-    elif (
-        c == curses.KEY_RIGHT and CURSOR[1] < STEP_COUNT - 1
-    ):  # use STEP_COUNT instead of 15
-        CURSOR[1] += 1
-    elif c == ord("1"):
-        STEP_COUNT = 16
-        GRID = [row[:STEP_COUNT] for row in GRID]  # truncate each row to 16 steps
-        if CURSOR[1] >= STEP_COUNT:  # if cursor is beyond the new step count
-            CURSOR[1] = STEP_COUNT - 1  # move cursor to the last step
-    elif c == ord("2"):
-        STEP_COUNT = 32
-        GRID = [
-            row.ljust(STEP_COUNT, "x") for row in GRID
-        ]  # expand each row to 32 steps
-    elif c == ord(" "):
-        if CURSOR[0] in [
-            len(instruments) - 2,
-            len(instruments) - 1,
-        ]:  # if cursor is at the 'BL' or 'PA' line
-            GRID[CURSOR[0]] = (
-                GRID[CURSOR[0]][: CURSOR[1]]
-                + {"x": "o", "o": "u", "u": "p", "p": "x"}[GRID[CURSOR[0]][CURSOR[1]]]
-                + GRID[CURSOR[0]][CURSOR[1] + 1 :]
-            )
-        else:
-            GRID[CURSOR[0]] = (
-                GRID[CURSOR[0]][: CURSOR[1]]
-                + {"x": "o", "o": "x"}[GRID[CURSOR[0]][CURSOR[1]]]
-                + GRID[CURSOR[0]][CURSOR[1] + 1 :]
-            )
-    elif c in (ord("8"), ord("9")):
-        CURRENT_KIT = {ord("8"): "808", ord("9"): "909"}[c]
-    elif c in (ord("8"), ord("9")):
-        CURRENT_KIT = {ord("8"): "808", ord("9"): "909"}[c]
-        instruments = INSTRUMENTS_808 if CURRENT_KIT == "808" else INSTRUMENTS_909
-    elif c == ord("0") or c == ord(")"):  # handle shift for resetting
-        SWING = 50
-    elif c == ord("5"):
-        SWING = SWING = max(SWING - 5, 0)
-    elif c == ord("6"):
-        SWING = min(SWING + 5, 100)
-    elif c == ord("%"):
-        SWING = SWING = max(SWING - 1, 0)
-    elif c == ord("^"):
-        SWING = min(SWING + 1, 100)
-    elif c == ord("p"):
-        SLIDE_AMT = min(SLIDE_AMT + 0.05, 1)  # swing can't go above 1
-    elif c == ord("o"):
-        SLIDE_AMT = max(SLIDE_AMT - 0.05, 0)  # swing can't go below 0
-    elif c == ord("-"):
-        BPM = max(BPM - 5, 1)  # BPM cannot go below 1
-        BPMFRAME = (60 / BPM) / 4
-    elif c == ord("="):
-        BPM += 5
-        BPMFRAME = (60 / BPM) / 4
-    elif c == ord("_"):
-        BPM = max(BPM - 1, 1)  # BPM cannot go below 1
-        BPMFRAME = (60 / BPM) / 4
-    elif c == ord("+"):
-        BPM += 1
-        BPMFRAME = (60 / BPM) / 4
-    elif c == ord("g"):
-        BASSLINE_FILTER_FREQ = min(BASSLINE_FILTER_FREQ * 2, 12800.0)
-    elif c == ord("f"):
-        BASSLINE_FILTER_FREQ /= 2
-    elif c == ord("x"):
-        GRID = ["x" * STEP_COUNT for _ in range(len(instruments))]
-    elif c == ord("m"):  # Mute/unmute the current track
-        if instruments[CURSOR[0]].level == 0.0:
-            INSTRUMENT_MUTE_STATUS[CURSOR[0]] = False  # Unmute the track
-            instruments[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
-            INSTRUMENTS_808[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
-            INSTRUMENTS_909[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
-        else:
-            INSTRUMENT_MUTE_STATUS[CURSOR[0]] = True  # Mute the track
-            ORIGINAL_LEVELS[CURSOR[0]] = instruments[
-                CURSOR[0]
-            ].level  # Save the current level
-            instruments[CURSOR[0]].level = 0.0
-            INSTRUMENTS_808[CURSOR[0]].level = 0.0
-            INSTRUMENTS_909[CURSOR[0]].level = 0.0
-    elif c == ord("s"):
-        update_sequence()
-        if PLAYBACK_THREAD is None:
-            PLAYBACK_THREAD = threading.Thread(target=playback_function)
-            PLAYBACK_THREAD.start()
-        else:
+        if c == curses.KEY_UP and CURSOR[0] > 0:
+            CURSOR[0] -= 1
+        elif c == curses.KEY_DOWN and CURSOR[0] < len(instruments) - 1:
+            CURSOR[0] += 1
+        elif c == curses.KEY_LEFT and CURSOR[1] > 0:
+            CURSOR[1] -= 1
+        elif (
+            c == curses.KEY_RIGHT and CURSOR[1] < STEP_COUNT - 1
+        ):  # use STEP_COUNT instead of 15
+            CURSOR[1] += 1
+        elif c == ord("1"):
+            STEP_COUNT = 16
+            GRID = [row[:STEP_COUNT]
+                    for row in GRID]  # truncate each row to 16 steps
+            if CURSOR[1] >= STEP_COUNT:  # if cursor is beyond the new step count
+                CURSOR[1] = STEP_COUNT - 1  # move cursor to the last step
+        elif c == ord("2"):
+            STEP_COUNT = 32
+            GRID = [
+                row.ljust(STEP_COUNT, "x") for row in GRID
+            ]  # expand each row to 32 steps
+        elif c == ord(" "):
+            if CURSOR[0] in [
+                len(instruments) - 2,
+                len(instruments) - 1,
+            ]:  # if cursor is at the 'BL' or 'PA' line
+                GRID[CURSOR[0]] = (
+                    GRID[CURSOR[0]][: CURSOR[1]]
+                    + {"x": "o", "o": "u", "u": "p",
+                        "p": "x"}[GRID[CURSOR[0]][CURSOR[1]]]
+                    + GRID[CURSOR[0]][CURSOR[1] + 1:]
+                )
+            else:
+                GRID[CURSOR[0]] = (
+                    GRID[CURSOR[0]][: CURSOR[1]]
+                    + {"x": "o", "o": "x"}[GRID[CURSOR[0]][CURSOR[1]]]
+                    + GRID[CURSOR[0]][CURSOR[1] + 1:]
+                )
+        elif c in (ord("8"), ord("9")):
+            CURRENT_KIT = {ord("8"): "808", ord("9"): "909"}[c]
+            instruments = INSTRUMENTS_808 if CURRENT_KIT == "808" else INSTRUMENTS_909
+        elif c == ord("0") or c == ord(")"):  # handle shift for resetting
+            SWING = 50
+        elif c == ord("5"):
+            SWING = SWING = max(SWING - 5, 0)
+        elif c == ord("6"):
+            SWING = min(SWING + 5, 100)
+        elif c == ord("%"):
+            SWING = SWING = max(SWING - 1, 0)
+        elif c == ord("^"):
+            SWING = min(SWING + 1, 100)
+        elif c == ord("p"):
+            SLIDE_AMT = min(SLIDE_AMT + 0.05, 1)  # swing can't go above 1
+        elif c == ord("o"):
+            SLIDE_AMT = max(SLIDE_AMT - 0.05, 0)  # swing can't go below 0
+        elif c == ord("-"):
+            BPM = max(BPM - 5, 1)  # BPM cannot go below 1
+            BPMFRAME = (60 / BPM) / 4
+        elif c == ord("="):
+            BPM += 5
+            BPMFRAME = (60 / BPM) / 4
+        elif c == ord("_"):
+            BPM = max(BPM - 1, 1)  # BPM cannot go below 1
+            BPMFRAME = (60 / BPM) / 4
+        elif c == ord("+"):
+            BPM += 1
+            BPMFRAME = (60 / BPM) / 4
+        elif c == ord("g"):
+            BASSLINE_FILTER_FREQ = min(BASSLINE_FILTER_FREQ * 2, 12800.0)
+        elif c == ord("f"):
+            BASSLINE_FILTER_FREQ /= 2
+        elif c == ord("x"):
+            GRID = ["x" * STEP_COUNT for _ in range(len(instruments))]
+        elif c == ord("m"):  # Mute/unmute the current track
+            if instruments[CURSOR[0]].level == 0.0:
+                INSTRUMENT_MUTE_STATUS[CURSOR[0]] = False  # Unmute the track
+                instruments[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
+                INSTRUMENTS_808[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
+                INSTRUMENTS_909[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
+            else:
+                INSTRUMENT_MUTE_STATUS[CURSOR[0]] = True  # Mute the track
+                ORIGINAL_LEVELS[CURSOR[0]] = instruments[
+                    CURSOR[0]
+                ].level  # Save the current level
+                instruments[CURSOR[0]].level = 0.0
+                INSTRUMENTS_808[CURSOR[0]].level = 0.0
+                INSTRUMENTS_909[CURSOR[0]].level = 0.0
+        elif c == ord("s"):
+            update_sequence()
+            if PLAYBACK_THREAD is None:
+                PLAYBACK_THREAD = threading.Thread(target=playback_function)
+                PLAYBACK_THREAD.start()
+            else:
+                PLAYBACK_THREAD = None
+        elif c == ord("q"):
             PLAYBACK_THREAD = None
+            IS_EXITING = True
+            break
+except KeyboardInterrupt:
+    print('Interrupted. Exiting.')
+    IS_EXITING = True
+    PLAYBACK_THREAD = None
+    curses.endwin()
 
 curses.nocbreak()
 stdscr.keypad(False)
