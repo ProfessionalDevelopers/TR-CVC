@@ -406,6 +406,8 @@ try:
             BASSLINE_FILTER_FREQ /= 2
         elif c == ord("x"):
             GRID = ["x" * 16 for _ in range(len(instruments))]
+        elif c == ord("z"):
+            GRID[CURSOR[0]] = "x" * STEP_COUNT
         elif c == ord("m"):  # Mute/unmute the current track
             if instruments[CURSOR[0]].level == 0.0:
                 INSTRUMENT_MUTE_STATUS[CURSOR[0]] = False  # Unmute the track
