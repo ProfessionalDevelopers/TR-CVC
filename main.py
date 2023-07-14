@@ -113,9 +113,9 @@ SNARE_909 += generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)
 HIHAT_909 = bandpass_filter(generate_sound(0, 0.0025, int(FS * 0.5), noise=True), 7000, 9000, FS)
 OPEN_HIHAT_909 = bandpass_filter(generate_sound(100, 0.0005, int(FS * 1.4), noise=True), 6000, 9000, FS)
 COWBELL_909 = generate_sound(480.0, 0.001, int(FS * 0.075))
-HIGH_TOM_909 = generate_kick_sound(350.0, 150.0, 0.0005, int(FS * 0.2))
-MID_TOM_909 = generate_kick_sound(300.0, 125.0, 0.0005, int(FS * 0.2))  
-LOW_TOM_909 = generate_kick_sound(200.0, 100.0, 0.0005, int(FS * 0.2))
+HIGH_TOM_808 = generate_kick_sound(350.0, 150.0, 0.0005, int(FS * 0.2))
+MID_TOM_808 = generate_kick_sound(300.0, 125.0, 0.0005, int(FS * 0.2))  
+LOW_TOM_808 = generate_kick_sound(200.0, 100.0, 0.0005, int(FS * 0.2))
 CLAP_909 = generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)  
 
 # PIANO_SOUND = generate_piano_sound(440.0, 0.001, int(FS * BPMFRAME))  # A4 note
