@@ -20,11 +20,6 @@ SWING = 50
 PLAYBACK_THREAD = None
 CURRENT_KIT = "808"
 BASSLINE_FILTER_FREQ = 880.0
-# BASSLINE_FILTER_FREQS = [110.0, 220.0, 440.0, 880.0, 1760.0, 3520.0, 7040.0, 14080.0]  # Low-pass filter frequencies for bassline
-# BASSLINE_FILTER_INDEX = 0  # Index for the current filter frequency
-# BASSLINE_FILTER_DIRECTION = 1  # 1 for increasing, -1 for decreasing
-
-
 
 class Instrument:
     def __init__(self, label, sound, level):
@@ -239,7 +234,7 @@ while True:
         stdscr.addstr(i, 0, f'{instruments[i].label} {instruments[i].level:.2f}: {row_str}')
         
     stdscr.addstr(len(GRID)+1, 0, '\n')  # Add a blank line between the sequencer and the status
-    stdscr.addstr(len(GRID)+2, 0, f'⇧/(-/=) BPM: {BPM}\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f/g): Bassline Filter Cutoff: {BASSLINE_FILTER_FREQ}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}\nSwing: {SWING}%')
+    stdscr.addstr(len(GRID)+2, 0, f'⇧/(-/=) BPM: {BPM}\n⇧/(5/6/0) Swing: {SWING}%\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f/g): Bassline Filter Cutoff: {BASSLINE_FILTER_FREQ}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}')
     
     stdscr.move(CURSOR[0], CURSOR[1] // 4 * 5 + CURSOR[1] % 4 + len(instruments[CURSOR[0]].label) + 7)
     stdscr.refresh()
@@ -264,12 +259,16 @@ while True:
     elif c in (ord('8'), ord('9')):
         CURRENT_KIT = {ord('8'): '808', ord('9'): '909'}[c]
         instruments = INSTRUMENTS_808 if CURRENT_KIT == '808' else INSTRUMENTS_909  
-    elif c == ord('0'):
+    elif c == ord('0') or c == ord(')'): #handle shift for resetting
         SWING = 50
     elif c == ord('5'):
-        SWING = 60
+        SWING = SWING = max(SWING - 5, 0)
     elif c == ord('6'):
-        SWING = 80
+        SWING = min(SWING + 5, 100)
+    elif c == ord('%'):
+        SWING = SWING = max(SWING - 1, 0)
+    elif c == ord('^'):
+        SWING = min(SWING + 1, 100)
     elif c == ord('-'):
         BPM = max(BPM - 5, 1)  # BPM cannot go below 1
         BPMFRAME = (60/BPM)/4
