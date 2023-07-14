@@ -332,7 +332,7 @@ try:
         stdscr.addstr(
             len(GRID) + 1,
             0,
-            f'Move with (arrows), press (space) to toggle a step, (x) to clear the pattern\n\n⇧/(-/=) BPM: {BPM}\n⇧/(5/6/0) Swing: {SWING}%\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}\n(o/p): Slide Amount: {SLIDE_AMT * 100}%\n(m): Mute/Unmute Track\n\n(q) to quit',
+            f'Move with (arrows), press (space) to toggle a step, \n(x) to clear the pattern, (z) to clear the row\n\n⇧/(-/=) BPM: {BPM}\n⇧/(5/6/0) Swing: {SWING}%\n(8/9): Selected Kit: {CURRENT_KIT}\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}\n(o/p): Slide Amount: {SLIDE_AMT * 100}%\n(m): Mute/Unmute Track\n\n(q) to quit',
         )
 
         stdscr.move(
