@@ -1,101 +1,101 @@
-import numpy as np
-from scipy import signal
-from scipy.signal import butter, lfilter
-import sounddevice as sd
 import curses
-import threading
-import random
 import json
 import os
+import threading
+import numpy as np
+from scipy import signal
+import sounddevice as sd
 
-FS = 44100  # sample rate
-SEQUENCE_FILE = 'sequence.json'  # the file where we'll save and load the sequence
-LABELS = ['BD', 'SD', 'HH', 'OH', 'CB', 'HT', 'LT', 'BL']
-# add a level for the bassline at the end
-STEPS = 32
-LEVELS = [0.8, 1.0, 1.0, 1.0, 1.0, 0.9, 0.8, 0.2]
-MASTER_LEVEL = 0.8  # master level
-GRID = ['x'*STEPS for _ in range(8)]  # added an extra row for the bassline
+FS = 44100  
+BPM = 120.0
+BPMFRAME = (60/BPM)/4
+SEQUENCE_FILE = 'sequence.json'  
+MASTER_LEVEL = 0.8  
+GRID = ['x'*16 for _ in range(11)]  
 CURSOR = [0, 0]
-COMPLETE_SEQUENCE = np.zeros(STEPS * int(FS * 0.125), dtype=np.float32)
+COMPLETE_SEQUENCE = np.zeros(16 * int(FS * BPMFRAME), dtype=np.float32)
 SWING = 0
 PLAYBACK_THREAD = None
 CURRENT_KIT = "808"
+BASSLINE_FILTER_FREQS = [110.0, 220.0, 440.0, 880.0, 1760.0] 
+BASSLINE_FILTER_INDEX = 0  
+BASSLINE_FILTER_DIRECTION = 1  
 
+class Instrument:
+    def __init__(self, label, sound, level):
+        self.label = label
+        self.sound = sound
+        self.level = level
 
-def generate_sound(freq, decay_factor, length, noise=False):
+def generate_sound(freq, decay_factor, length, noise=False, end_freq=None):
     x = np.arange(length)
-    y = np.random.normal(0, 1, length) if noise else np.sin(
-        2 * np.pi * freq * x / FS)
+    if noise:
+        y = np.random.normal(0, 1, length)
+    elif end_freq:
+        y = np.sin(2 * np.pi * freq * np.exp(np.log(end_freq/freq)*x/length) * x / FS)
+    else:
+        y = np.sin(2 * np.pi * freq * x / FS)
     decay = np.exp(-decay_factor * x)
     return (y * decay).astype(np.float32)
-
-
-def generate_kick_sound(start_freq, end_freq, decay_factor, length):
-    x = np.arange(length)
-    y = np.sin(2 * np.pi * start_freq *
-               np.exp(np.log(end_freq/start_freq)*x/length) * x / FS)
-    decay = np.exp(-decay_factor * x)
-    return (y * decay).astype(np.float32)
-
 
 def bandpass_filter(data, lowcut, highcut, fs, order=5):
     nyquist = 0.5 * fs
     low = lowcut / nyquist
     high = highcut / nyquist
-    b, a = butter(order, [low, high], btype='band')
-    return lfilter(b, a, data)
+    b, a = signal.butter(order, [low, high], btype='band')
+    return signal.lfilter(b, a, data)
 
+def lowpass_filter(data, cutoff, fs, order=5):
+    nyquist = 0.5 * fs
+    normal_cutoff = cutoff / nyquist
+    b, a = signal.butter(order, normal_cutoff, btype='low', analog=False)
+    y = signal.lfilter(b, a, data)
+    return y
 
 def generate_acid_bassline(note_frequency, note_duration, slide_duration, resonance, distortion, fs=44100):
     t = np.arange(note_duration * fs)
-    bassline = signal.square(
-        2 * np.pi * note_frequency * t / fs)  # using square wave
-
+    bassline = signal.square(2 * np.pi * note_frequency * t / fs)
     if slide_duration > 0:
-        slide_frequencies = np.linspace(
-            note_frequency, note_frequency * 2, int(fs * slide_duration))
-        slide = signal.square(2 * np.pi * slide_frequencies *
-                              np.arange(len(slide_frequencies)) / fs)
+        slide_frequencies = np.linspace(note_frequency, note_frequency * 2, int(fs * slide_duration))
+        slide = signal.square(2 * np.pi * slide_frequencies * np.arange(len(slide_frequencies)) / fs)
         bassline[:len(slide)] = slide
-
     if resonance > 0:
         sos = signal.butter(10, note_frequency, 'hp', fs=fs, output='sos')
         bassline = signal.sosfilt(sos, bassline)
-
     if distortion > 0:
         bassline = np.clip(bassline, -distortion, distortion)
-
     return bassline
 
+def init_instruments(kick, snare, hihat, open_hihat, cowbell, high_tom, low_tom, mid_tom, clap, piano_sound):
+    return [Instrument('BD', kick, 0.8), Instrument('SD', snare, 1.0), Instrument('HH', hihat, 1.0),
+            Instrument('OH', open_hihat, 1.0), Instrument('CB', cowbell, 1.0), Instrument('HT', high_tom, 0.9),
+            Instrument('LT', low_tom, 0.8), Instrument('MT', mid_tom, 0.7), Instrument('CP', clap, 0.6), 
+            Instrument('BL', None, 0.2), Instrument('PA', piano_sound, 0.8)]
 
-KICK_808 = generate_kick_sound(65.0, 50.0, 0.0003, int(FS * 0.4))
-SNARE_808 = generate_sound(180.0, 0.0015, int(FS * 0.125))
-SNARE_808 += generate_sound(0, 0.0015, int(FS * 0.125), noise=True)
-HIHAT_808 = bandpass_filter(generate_sound(
-    0, 0.005, int(FS * 0.5), noise=True), 7000, 9000, FS)
-OPEN_HIHAT_808 = bandpass_filter(generate_sound(
-    0, 0.001, int(FS * 1.4), noise=True), 7000, 9000, FS)
-COWBELL_808 = generate_sound(380.0, 0.002, int(FS * 0.125))
-HIGH_TOM_808 = generate_kick_sound(300.0, 150.0, 0.0005, int(FS * 0.2))
-LOW_TOM_808 = generate_kick_sound(200.0, 75.0, 0.0005, int(FS * 0.2))
+KICK_808 = generate_sound(65.0, 0.0003, int(FS * 0.4), end_freq=50.0)
+SNARE_808 = generate_sound(180.0, 0.0015, int(FS * BPMFRAME)) + generate_sound(0, 0.0015, int(FS * BPMFRAME), noise=True)
+HIHAT_808 = bandpass_filter(generate_sound(0, 0.005, int(FS * 0.5), noise=True), 7000, 9000, FS)
+OPEN_HIHAT_808 = bandpass_filter(generate_sound(0, 0.001, int(FS * 1.4), noise=True), 7000, 9000, FS)
+COWBELL_808 = generate_sound(380.0, 0.002, int(FS * BPMFRAME))
+HIGH_TOM_808 = generate_sound(300.0, 0.0005, int(FS * 0.2), end_freq=150.0)
+LOW_TOM_808 = generate_sound(200.0, 0.0005, int(FS * 0.2), end_freq=75.0)
+MID_TOM_808 = generate_sound(250.0, 0.0005, int(FS * 0.2), end_freq=100.0)
+CLAP_808 = generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)
 
-KICK_909 = generate_kick_sound(
-    150.0, 30.0, 0.0002, int(FS * 0.5))  # longer and boomy
-SNARE_909 = generate_sound(220.0, 0.001, int(FS * 0.125))
-SNARE_909 += generate_sound(0, 0.001, int(FS * 0.125), noise=True)
-HIHAT_909 = bandpass_filter(generate_sound(
-    0, 0.0025, int(FS * 0.5), noise=True), 7000, 9000, FS)
-OPEN_HIHAT_909 = bandpass_filter(generate_sound(
-    100, 0.0005, int(FS * 1.4), noise=True), 6000, 9000, FS)
+KICK_909 = generate_sound(150.0, 0.0002, int(FS * 0.5), end_freq=30.0)
+SNARE_909 = generate_sound(220.0, 0.001, int(FS * BPMFRAME)) + generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)
+HIHAT_909 = bandpass_filter(generate_sound(0, 0.0025, int(FS * 0.5), noise=True), 7000, 9000, FS)
+OPEN_HIHAT_909 = bandpass_filter(generate_sound(100, 0.0005, int(FS * 1.4), noise=True), 6000, 9000, FS)
 COWBELL_909 = generate_sound(480.0, 0.001, int(FS * 0.075))
-HIGH_TOM_909 = generate_kick_sound(300.0, 150.0, 0.0005, int(FS * 0.2))
-LOW_TOM_909 = generate_kick_sound(200.0, 75.0, 0.0005, int(FS * 0.2))
+HIGH_TOM_909 = generate_sound(300.0, 0.0005, int(FS * 0.2), end_freq=150.0)
+LOW_TOM_909 = generate_sound(200.0, 0.0005, int(FS * 0.2), end_freq=75.0)
+MID_TOM_909 = generate_sound(250.0, 0.0005, int(FS * 0.2), end_freq=100.0)
+CLAP_909 = generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)
 
-SOUNDS_808 = [KICK_808, SNARE_808, HIHAT_808,
-              OPEN_HIHAT_808, COWBELL_808, HIGH_TOM_808, LOW_TOM_808]
-SOUNDS_909 = [KICK_909, SNARE_909, HIHAT_909,
-              OPEN_HIHAT_909, COWBELL_909, HIGH_TOM_909, LOW_TOM_909]
+PIANO_SOUND = generate_sound(440.0, 0.001, int(FS * BPMFRAME))
+
+INSTRUMENTS_808 = init_instruments(KICK_808, SNARE_808, HIHAT_808, OPEN_HIHAT_808, COWBELL_808, HIGH_TOM_808, LOW_TOM_808, MID_TOM_808, CLAP_808, PIANO_SOUND)
+INSTRUMENTS_909 = init_instruments(KICK_909, SNARE_909, HIHAT_909, OPEN_HIHAT_909, COWBELL_909, HIGH_TOM_909, LOW_TOM_909, MID_TOM_909, CLAP_909, PIANO_SOUND)
 
 stdscr = curses.initscr()
 curses.noecho()
@@ -109,44 +109,55 @@ if os.path.exists(SEQUENCE_FILE):
         SWING = state['swing']
         CURRENT_KIT = state['current_kit']
 
+instruments = INSTRUMENTS_808 if CURRENT_KIT == '808' else INSTRUMENTS_909
+ORIGINAL_LEVELS = {i: inst.level for i, inst in enumerate(instruments)}
+BASSLINE_FILTER_CUTOFF = BASSLINE_FILTER_FREQS[BASSLINE_FILTER_INDEX]  # Initial filter cutoff frequency
 
 def dump_sequence():
     with open(SEQUENCE_FILE, 'w') as f:
-        json.dump({'grid': GRID, 'swing': SWING,
-                  'current_kit': CURRENT_KIT}, f)
+        json.dump({'grid': GRID, 'swing': SWING, 'current_kit': CURRENT_KIT}, f)
 
+# Define frequencies for 'o', 'u', 'p' for the bassline and piano
+bassline_freqs = [55, 110, 220]
+piano_freqs = [262, 330, 392]  # frequencies for C4, E4, G4 notes
 
 def update_sequence():
     dump_sequence()
-    global COMPLETE_SEQUENCE
-    sequences = [np.zeros(STEPS * int(FS * 0.125), dtype=np.float32)
-                 for _ in range(8)]
-    sounds = SOUNDS_808 if CURRENT_KIT == '808' else SOUNDS_909
+    global COMPLETE_SEQUENCE, instruments
+    sequences = [np.zeros(16 * int(FS * BPMFRAME), dtype=np.float32) for _ in range(len(INSTRUMENTS_808))]
+    instruments = INSTRUMENTS_808 if CURRENT_KIT == '808' else INSTRUMENTS_909
 
-    for i in range(STEPS):
-        start_index = int(i * FS * 0.125 * (1 + SWING)
-                          ) if SWING and i % 2 else i * int(FS * 0.125)
-        end_indices = [start_index + sound.size for sound in sounds]
-        end_indices.append(start_index + int(FS * 0.125))
+    for i in range(16):
+        start_index = int(i * FS * BPMFRAME * (1 + SWING)) if SWING and i % 2 else i * int(FS * BPMFRAME)
+        end_indices = [start_index + inst.sound.size if inst.sound is not None else start_index for inst in instruments]
+        end_indices.append(start_index + int(FS * BPMFRAME))
 
-        for j in range(7):
-            if GRID[j][i] != 'x':
-                sound = sounds[j] * LEVELS[j]
-                sequences[j][start_index:min(end_indices[j], sequences[j].size)] += sound[:min(
-                    end_indices[j], sequences[j].size) - start_index]
+        for j in range(len(instruments)):
+            if GRID[j][i] != 'x' and instruments[j].sound is not None:
+                sound = instruments[j].sound * instruments[j].level
+                sequences[j][start_index:min(end_indices[j], sequences[j].size)] += sound[:min(end_indices[j], sequences[j].size) - start_index]
 
-        min_index = min(end_indices[7], sequences[7].size)
-        if GRID[7][i] in 'oup':
-            bassline_freqs = [55, 110, 220]  # Frequencies for 'o', 'u', 'p'
-            sound = generate_acid_bassline(
-                bassline_freqs['oup'.index(GRID[7][i])], 0.125, 0, 90, 0) * LEVELS[7]
-            sequences[7][start_index:min_index] += sound[:min_index - start_index]
+        # Handle the bassline and piano lines separately
+        for j in [-2, -1]:  # the last two lines are the 'BA' and 'PA' lines
+            min_index = min(end_indices[j], sequences[j].size)
+            if GRID[j][i] in 'oup':
+                freqs = bassline_freqs if j == -2 else piano_freqs
+                if j == -2:  # if it's the 'BL' line
+                    sound = generate_acid_bassline(freqs['oup'.index(GRID[j][i])], BPMFRAME, 0, 90, 0) * instruments[j].level
+                    sound = lowpass_filter(sound, BASSLINE_FILTER_FREQS[BASSLINE_FILTER_INDEX], FS)  # Apply low-pass filter
+                else:  # if it's the 'PA' line
+                    sound = generate_piano_sound(freqs['oup'.index(GRID[j][i])], 0.001, int(FS * BPMFRAME)) * instruments[j].level
+                sequences[j][start_index:min_index] += sound[:min_index - start_index]
+   
+
+
 
     COMPLETE_SEQUENCE = sum(sequences) * MASTER_LEVEL
 
 
+
 def playback_function():
-    global PLAYBACK_THREAD
+    global PLAYBACK_THREAD, instruments
     with sd.OutputStream(samplerate=FS, channels=1) as stream:
         while PLAYBACK_THREAD is not None:
             update_sequence()
@@ -156,39 +167,53 @@ def playback_function():
 while True:
     for i, row in enumerate(GRID):
         row_str = ' '.join(row[j:j+4] for j in range(0, len(row), 4))
-        stdscr.addstr(i, 0, f'{LABELS[i]} {LEVELS[i]:.2f}: {row_str}')
-    stdscr.addstr(
-        8, 0, f'Selected Kit: {CURRENT_KIT}\nSwing: {SWING * 100:.0f}%\nStatus: {"Playing" if PLAYBACK_THREAD else "Stopped"}\nMaster level: {MASTER_LEVEL}')
-    stdscr.move(CURSOR[0], CURSOR[1] // 4 * 5 + CURSOR[1] %
-                4 + len(LABELS[CURSOR[0]]) + 7)
+        stdscr.addstr(i, 0, f'{instruments[i].label} {instruments[i].level:.2f}: {row_str}')
+        
+    stdscr.addstr(len(GRID)+1, 0, '\n')  # Add a blank line between the sequencer and the status
+    stdscr.addstr(len(GRID)+2, 0, f'(8/9): Selected Kit: {CURRENT_KIT}\n(5/6/0): Swing: {SWING * 100:.0f}%\n(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}\n(f): Bassline Filter Cutoff: {BASSLINE_FILTER_CUTOFF}\n(m): Mute/Unmute Track\nMaster level: {MASTER_LEVEL}')
+    
+    stdscr.move(CURSOR[0], CURSOR[1] // 4 * 5 + CURSOR[1] % 4 + len(instruments[CURSOR[0]].label) + 7)
     stdscr.refresh()
 
     c = stdscr.getch()
 
     if c == curses.KEY_UP and CURSOR[0] > 0:
         CURSOR[0] -= 1
-    elif c == curses.KEY_DOWN and CURSOR[0] < 7:
+    elif c == curses.KEY_DOWN and CURSOR[0] < len(instruments) - 1:
         CURSOR[0] += 1
     elif c == curses.KEY_LEFT and CURSOR[1] > 0:
         CURSOR[1] -= 1
-    elif c == curses.KEY_RIGHT and CURSOR[1] < STEPS - 1:
+    elif c == curses.KEY_RIGHT and CURSOR[1] < 15:
         CURSOR[1] += 1
     elif c == ord(' '):
-        GRID[CURSOR[0]] = GRID[CURSOR[0]][:CURSOR[1]] + {'x': 'o', 'o': 'u' if CURSOR[0] == 7 else 'x', 'u': 'p', 'p': 'x'}[
-            GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1]+1:]
+        if CURSOR[0] in [len(instruments) - 2, len(instruments) - 1]:  # if cursor is at the 'BL' or 'PA' line
+            GRID[CURSOR[0]] = GRID[CURSOR[0]][:CURSOR[1]] + {'x': 'o', 'o': 'u', 'u': 'p', 'p': 'x'}[GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1]+1:]
+        else:
+            GRID[CURSOR[0]] = GRID[CURSOR[0]][:CURSOR[1]] + {'x': 'o', 'o': 'x'}[GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1]+1:]
     elif c in (ord('8'), ord('9')):
         CURRENT_KIT = {ord('8'): '808', ord('9'): '909'}[c]
-    elif c == ord('r'):
-        GRID[CURSOR[0]] = ''.join(random.choice(
-            ['x', 'o'] + (['u', 'p'] if [CURSOR[0]] == 7 else [])) for _ in range(STEPS))
+    elif c in (ord('8'), ord('9')):
+        CURRENT_KIT = {ord('8'): '808', ord('9'): '909'}[c]
+        instruments = INSTRUMENTS_808 if CURRENT_KIT == '808' else INSTRUMENTS_909  # Add this line
     elif c == ord('0'):
         SWING = 0
     elif c == ord('5'):
         SWING = 0.5
     elif c == ord('6'):
         SWING = 0.6
+    elif c == ord('f'):
+        BASSLINE_FILTER_INDEX += BASSLINE_FILTER_DIRECTION
+        if BASSLINE_FILTER_INDEX == len(BASSLINE_FILTER_FREQS) - 1 or BASSLINE_FILTER_INDEX == 0:
+            BASSLINE_FILTER_DIRECTION *= -1
+        BASSLINE_FILTER_CUTOFF = BASSLINE_FILTER_FREQS[BASSLINE_FILTER_INDEX]
     elif c == ord('x'):
-        GRID[CURSOR[0]] = 'x'*STEPS
+        GRID = ['x'*16 for _ in range(len(instruments))]
+    elif c == ord('m'):  # Mute/unmute the current track
+        if instruments[CURSOR[0]].level == 0.0:
+            instruments[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]  # Unmute the track
+        else:
+            ORIGINAL_LEVELS[CURSOR[0]] = instruments[CURSOR[0]].level  # Save the current level
+            instruments[CURSOR[0]].level = 0.0  # Mute the track
     elif c == ord('s'):
         update_sequence()
         if PLAYBACK_THREAD is None:
@@ -196,9 +221,6 @@ while True:
             PLAYBACK_THREAD.start()
         else:
             PLAYBACK_THREAD = None
-    elif c == ord('q'):
-        PLAYBACK_THREAD = None
-        exit()
 
 curses.nocbreak()
 stdscr.keypad(False)
