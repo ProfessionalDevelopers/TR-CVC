@@ -21,7 +21,7 @@ https://github.com/ProfessionalDevelopers/TR-CVC/assets/1034155/59721b06-78c2-44
 - Configurable per-instrument mixer levels per
 - Automatic saving and restoration of sequences
 
-#To come:
+#TODO
 - Adjustable BPM
 - Swing
 - FX?
