@@ -342,7 +342,7 @@ try:
             len(GRID) + 1,
             0,
             f'''Move with (arrows), press (space) to toggle a step, (x) to clear the pattern, (q) to quit.
-
+(1/2): Toggle 16 or 32 steps
 ⇧/(-/=) BPM: {BPM}
 ⇧/(5/6/0) Swing: {SWING}%
 (8/9): Selected Kit: {CURRENT_KIT}
