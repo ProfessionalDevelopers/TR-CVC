@@ -171,7 +171,10 @@ def update_sequence():
     for j in range(len(instruments)):
         instrument_sequence = np.zeros(16 * int(FS * BPMFRAME), dtype=np.float32)
         for i in range(16):
-            start_index = min(int(i * FS * BPMFRAME), instrument_sequence.size - 1)
+            # Start index is shifted forward by a certain amount for even steps
+            swing_shift = ((FS * BPMFRAME) * (SWING - 50) / 100) if i % 2 == 1 else 0
+            start_index = min(int(i * FS * BPMFRAME + swing_shift), instrument_sequence.size - 1)
+
             if GRID[j][i] != 'x' and instruments[j].sound is not None:
                 sound = instruments[j].sound * instruments[j].level
                 end_index = min(start_index + sound.size, instrument_sequence.size)
@@ -244,9 +247,9 @@ while True:
     elif c == ord('0'):
         SWING = 50
     elif c == ord('5'):
-        SWING = 55
-    elif c == ord('6'):
         SWING = 60
+    elif c == ord('6'):
+        SWING = 80
     elif c == ord('-'):
         BPM = max(BPM - 5, 1)  # BPM cannot go below 1
         BPMFRAME = (60/BPM)/4
