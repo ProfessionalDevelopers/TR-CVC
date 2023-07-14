@@ -6,9 +6,16 @@ This was built entirely through interaction with OpenAI's ChatGPT, specifically 
 
 The goal was to build a drum machine with reatlime editing capabilities, combined with the ability to add additional sounds and sequencing modes. 
 
+Screenshot:
 ![CleanShot 2023-07-14 at 09 48 45@2x](https://github.com/ProfessionalDevelopers/TR-CVC/assets/1034155/a6f0ae1a-7c28-46c4-9c59-e4f743670a0e)
 
+
+Video and sound examples:
+
+https://github.com/ProfessionalDevelopers/TR-CVC/assets/1034155/59721b06-78c2-44bd-ae2a-881506157d4d
+
 # Features:
+- Simple 16-step sequencer: press space to toggle a step, and on bass and piano lines, repeat it to choose a different note.
 - Bad approxmiations of classic roland 808 and 909 sounds: Bass Drum, Snare, Low- Mid- and High-Toms, Clap, Cowbell, Hihat and Open Hihat
 - A simplistic bassline sequencer allowing octave jumps of a square wav
 - Configurable highpass filter for the bass sequence
