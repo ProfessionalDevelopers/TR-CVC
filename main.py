@@ -240,9 +240,6 @@ for inst in INSTRUMENTS_SMP:
     inst.load_sound()
 
 stdscr = curses.initscr()
-curses.start_color()
-curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
-curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
 curses.noecho()
 curses.cbreak()
 stdscr.keypad(True)
@@ -279,7 +276,6 @@ if CURRENT_KIT == "SMP":
     any_sample_exists()  # Add this line
 
 instruments = INSTRUMENTS_808 if CURRENT_KIT == "808" else INSTRUMENTS_909
-
 
 
 def dump_sequence():
@@ -393,14 +389,14 @@ try:
         stdscr.clear()
 
         for i, row in enumerate(GRID):
-            row_str = " ".join(row[j: j + 4] for j in range(0, STEP_COUNT, 4))  # Update here
-            label = instruments[i].label
+            row_str = " ".join(row[j: j + 4] for j in range(0, STEP_COUNT, 4))
+            if CURRENT_KIT == "SMP" and not SAMPLE_EXISTS[i]:
+                # If the current kit is "SMP" and the sample doesn't exist, replace the instrument label with "X"
+                label = "⌀ " + instruments[i].label.split()[1]
+            else:
+                label = instruments[i].label
             level = instruments[i].level
-            color = curses.color_pair(2)  # default to white
-            if CURRENT_KIT == 'SMP' and not SAMPLE_EXISTS[i]:
-                # Set text color to red if the sample does not exist
-                color = curses.color_pair(1)  # red
-            stdscr.addstr(i, 0, f"{label} {level:.2f}: {row_str}", color)
+            stdscr.addstr(i, 0, f"{label} {level:.2f}: {row_str}")
 
         stdscr.addstr(
             len(GRID) + 1, 0, "\n"
