@@ -409,6 +409,7 @@ try:
 (k): Selected Kit: {CURRENT_KIT}
 (m): Mute/Unmute Instrument
 (1/2): Toggle 16 or 32 steps
+⇧(1/2/3/4): Fill track w/ preset rhythm
 ⇧/(-/=) BPM: {BPM}
 ⇧/(5/6) Swing: {SWING}%
 (f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}
@@ -515,7 +516,14 @@ try:
             GRID = ["x" * STEP_COUNT for _ in range(len(instruments))]
         elif c == ord("z"):
             GRID[CURSOR[0]] = "x" * STEP_COUNT
-
+        elif c == ord("!"):
+            GRID[CURSOR[0]] = "oxxx" * int(STEP_COUNT / 4)
+        elif c == ord("@"):
+            GRID[CURSOR[0]] = "xxxxoxxx" * int(STEP_COUNT / 2)
+        elif c == ord("#"):
+            GRID[CURSOR[0]] = "oooo" * int(STEP_COUNT / 4)
+        elif c == ord("$"):
+            GRID[CURSOR[0]] = "xxox" * int(STEP_COUNT / 4)
         elif c == ord("m"):  # Mute/unmute the current track
             if instruments[CURSOR[0]].level == 0.0:
                 INSTRUMENT_MUTE_STATUS[CURSOR[0]] = False  # Unmute the track
