@@ -428,9 +428,9 @@ try:
             len(GRID) + 1, 0, "\n"
         )  # Add a blank line between the sequencer and the status
         stdscr.addstr(
-            len(GRID) + 1,
+            len(GRID) + 2,
             0,
-            f'''Move with (arrows), press (space) to toggle a step, (x) to clear the pattern, (q) to quit.
+            f'''Move with (arrows), press (space) to toggle a step, (x) to clear the pattern, (q) to quit. 
 (s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
 (k): Selected Kit: {CURRENT_KIT}
 (m): Mute/Unmute Instrument
