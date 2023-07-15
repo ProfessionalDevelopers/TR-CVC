@@ -142,6 +142,22 @@ def load_sample(file_path):
         # print(f"Failed to load sample: {file_path}")
         return np.zeros(int(FS * BPMFRAME), dtype=np.float32)  # return an array of zeros
 
+def any_sample_exists():
+    # Check if any sample exists
+    for i, inst in enumerate(INSTRUMENTS_SMP):
+        if inst.file_name is not None and os.path.exists(os.path.join(SAMPLES_PATH, inst.file_name)):
+            SAMPLE_EXISTS[i] = True
+        else:
+            SAMPLE_EXISTS[i] = False
+    return any(SAMPLE_EXISTS)
+
+def load_sample(file_path):
+    try:
+        data, _ = librosa.load(file_path, sr=FS)
+        return data
+    except Exception:
+        return np.zeros(int(FS * BPMFRAME), dtype=np.float32)  # return an array of zeros
+
 
 KICK_808 = generate_kick_sound(65.0, 50.0, 0.0003, int(FS * 0.4))
 SNARE_808 = generate_sound(180.0, 0.0015, int(FS * BPMFRAME))
@@ -217,10 +233,16 @@ INSTRUMENTS_SMP = [
     Instrument("♩ BL", None, 0.2),
     Instrument("♪ PA", None, 0.8),
 ]
+
+SAMPLE_EXISTS = [False for _ in INSTRUMENTS_SMP]
+
 for inst in INSTRUMENTS_SMP:
     inst.load_sound()
 
 stdscr = curses.initscr()
+curses.start_color()
+curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
+curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
 curses.noecho()
 curses.cbreak()
 stdscr.keypad(True)
@@ -253,8 +275,11 @@ if os.path.exists(SEQUENCE_FILE):
                 INSTRUMENTS_909[i].level = ORIGINAL_LEVELS[i]
     BPMFRAME = (60 / BPM) / 4
 
+if CURRENT_KIT == "SMP":
+    any_sample_exists()  # Add this line
 
 instruments = INSTRUMENTS_808 if CURRENT_KIT == "808" else INSTRUMENTS_909
+
 
 
 def dump_sequence():
@@ -368,12 +393,14 @@ try:
         stdscr.clear()
 
         for i, row in enumerate(GRID):
-            row_str = " ".join(
-                row[j: j + 4] for j in range(0, STEP_COUNT, 4)
-            )  # Update here
-            stdscr.addstr(
-                i, 0, f"{instruments[i].label} {instruments[i].level:.2f}: {row_str}"
-            )
+            row_str = " ".join(row[j: j + 4] for j in range(0, STEP_COUNT, 4))  # Update here
+            label = instruments[i].label
+            level = instruments[i].level
+            color = curses.color_pair(2)  # default to white
+            if CURRENT_KIT == 'SMP' and not SAMPLE_EXISTS[i]:
+                # Set text color to red if the sample does not exist
+                color = curses.color_pair(1)  # red
+            stdscr.addstr(i, 0, f"{label} {level:.2f}: {row_str}", color)
 
         stdscr.addstr(
             len(GRID) + 1, 0, "\n"
@@ -385,7 +412,7 @@ try:
 (1/2): Toggle 16 or 32 steps
 ⇧/(-/=) BPM: {BPM}
 ⇧/(5/6) Swing: {SWING}%
-(8): Selected Kit: {CURRENT_KIT}
+(k): Selected Kit: {CURRENT_KIT}
 (s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
 (f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}
 (o/p): Slide Amount: {SLIDE_AMT * 100}%
@@ -440,14 +467,18 @@ Master level: {MASTER_LEVEL}
                     + {"x": "o", "o": "x"}[GRID[CURSOR[0]][CURSOR[1]]]
                     + GRID[CURSOR[0]][CURSOR[1] + 1:]
                 )
-        elif c == ord("8"):
+        elif c == ord("k"):
             if CURRENT_KIT == "808":
                 CURRENT_KIT = "909"
             elif CURRENT_KIT == "909":
-                CURRENT_KIT = "SMP"
-                # Reload the samples every time you switch to the "SMP" kit
-                for inst in INSTRUMENTS_SMP:
-                    inst.load_sound()  # Use the load_sound method
+                # Only switch to the "SMP" kit if any of the samples exist
+                if any_sample_exists():
+                    CURRENT_KIT = "SMP"
+                    # Reload the samples every time you switch to the "SMP" kit
+                    for inst in INSTRUMENTS_SMP:
+                        inst.load_sound()  # Use the load_sound method
+                else:
+                    CURRENT_KIT = "808"
             else:
                 CURRENT_KIT = "808"
             if CURRENT_KIT == "808":
