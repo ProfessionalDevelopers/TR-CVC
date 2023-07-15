@@ -389,10 +389,10 @@ def playback_function():
 
             for step in steps:
                 # First, update the playhead position
-                stdscr.addstr(len(GRID) + 2, 0, " " * (STEP_COUNT * 5 + len(instruments[0].label) + 7))
+                stdscr.addstr(len(GRID), 0, " " * (STEP_COUNT * 5 + len(instruments[0].label) + 7))
                 offset = len(instruments[0].label) + 7
                 offset += playhead // 4  # increment offset after the 4th, 8th, and 12th steps
-                stdscr.addstr(len(GRID) + 2, playhead + offset, "*")
+                stdscr.addstr(len(GRID), playhead + offset, "*")
                 stdscr.refresh()
 
                 # Then, play the sound
@@ -403,6 +403,7 @@ def playback_function():
 
                 if not PLAYBACK_THREAD:
                     break
+
 
 
 
@@ -564,6 +565,7 @@ try:
             update_sequence()
             if PLAYBACK_THREAD is None:
                 PLAYBACK_THREAD = threading.Thread(target=playback_function)
+                playhead = 0
                 PLAYBACK_THREAD.start()
             else:
                 PLAYBACK_THREAD = None
