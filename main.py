@@ -302,6 +302,13 @@ piano_freqs = [262, 330, 440]  # frequencies for C4, E4, A4 notes
 
 playhead = 0
 
+def update_playhead_position(playhead):
+    stdscr.addstr(len(GRID), 0, " " * (STEP_COUNT * 5 + len(instruments[0].label) + 7))
+    offset = len(instruments[0].label) + 7
+    offset += playhead // 4  # increment offset after the 4th, 8th, and 12th steps
+    stdscr.addstr(len(GRID), playhead + offset, "*")
+    stdscr.refresh()
+
 
 def update_sequence():
     global playhead
@@ -389,12 +396,8 @@ def playback_function():
 
             for step in steps:
                 # First, update the playhead position
-                stdscr.addstr(len(GRID), 0, " " * (STEP_COUNT * 5 + len(instruments[0].label) + 7))
-                offset = len(instruments[0].label) + 7
-                offset += playhead // 4  # increment offset after the 4th, 8th, and 12th steps
-                stdscr.addstr(len(GRID), playhead + offset, "*")
-                stdscr.refresh()
-
+                update_playhead_position(playhead)
+                
                 # Then, play the sound
                 stream.write(step)
 
@@ -403,13 +406,6 @@ def playback_function():
 
                 if not PLAYBACK_THREAD:
                     break
-
-
-
-
-
-
-
 
 try:
     while True:
@@ -427,7 +423,6 @@ try:
             stdscr.addstr(i, 0, f"{label} {level:.2f}: {row_str}")
 
         stdscr.addstr(len(GRID) + 2, 0, " " * (5 + playhead * 5) + "*")
-
 
         stdscr.addstr(
             len(GRID) + 1, 0, "\n"
