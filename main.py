@@ -405,16 +405,14 @@ try:
             len(GRID) + 1,
             0,
             f'''Move with (arrows), press (space) to toggle a step, (x) to clear the pattern, (q) to quit.
+(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
+(k): Selected Kit: {CURRENT_KIT}
+(m): Mute/Unmute Instrument
 (1/2): Toggle 16 or 32 steps
 ⇧/(-/=) BPM: {BPM}
 ⇧/(5/6) Swing: {SWING}%
-(k): Selected Kit: {CURRENT_KIT}
-(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
 (f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}
 (o/p): Slide Amount: {SLIDE_AMT * 100}%
-(m): Mute/Unmute Track
-
-Master level: {MASTER_LEVEL}
 '''
         )
 
