@@ -21,7 +21,7 @@ BPMFRAME = (60 / BPM) / 4
 SEQUENCE_FILE = "sequence.json"  # the file where we'll save and load the sequence
 MASTER_LEVEL = 0.8  # master level
 STEP_COUNT = 16  # add this line
-GRID = ["x" * STEP_COUNT for _ in range(11)]
+GRID = ["x" * STEP_COUNT for _ in range(12)]
 CURSOR = [0, 0]
 COMPLETE_SEQUENCE = np.zeros(STEP_COUNT * int(FS * BPMFRAME), dtype=np.float32)
 SWING = 50
@@ -227,6 +227,7 @@ INSTRUMENTS_808 = [
     Instrument("Ⓚ CB", COWBELL_808, 1.0),
     Instrument("⨂ HH", HIHAT_808, 1.0),
     Instrument("⨁ OH", OPEN_HIHAT_808, 1.0),
+    Instrument("♪ SA", None, 0.8, "sample.wav"),
     Instrument("♩ BL", None, 0.2),
     Instrument("♪ PA", None, 0.8),
 ]
@@ -241,8 +242,10 @@ INSTRUMENTS_909 = [
     Instrument("Ⓚ CB", COWBELL_909, 1.0),
     Instrument("⨂ HH", HIHAT_909, 1.0),
     Instrument("⨁ OH", OPEN_HIHAT_909, 1.0),
+    Instrument("♪ SA", None, 0.8, "sample.wav"),
     Instrument("♩ BL", None, 0.2),
     Instrument("♪ PA", None, 0.8),
+
 ]
 
 INSTRUMENTS_SMP = [
@@ -254,15 +257,20 @@ INSTRUMENTS_SMP = [
     Instrument("॥ CP", None, 0.6, "cp.wav"),
     Instrument("Ⓚ CB", None, 1.0, "cb.wav"),
     Instrument("⨂ HH", None, 1.0, "hh.wav"),
-    Instrument("⨁ OH", None, 1.0, "oh.wav"),
+    Instrument("⨁ OH", None, 1.0, "oh.wav"),    
+    Instrument("♪ SA", None, 0.8, "sample.wav"),
     Instrument("♩ BL", None, 0.2),
     Instrument("♪ PA", None, 0.8),
+
 ]
 
 SAMPLE_EXISTS = [False for _ in INSTRUMENTS_SMP]
 
 for inst in INSTRUMENTS_SMP:
     inst.load_sound()
+
+# for inst in INSTRUMENTS_808:
+#     inst.load_sound()
 
 stdscr = curses.initscr()
 curses.noecho()
@@ -423,24 +431,24 @@ try:
             level = instruments[i].level
             stdscr.addstr(i, 0, f"{label} {level:.2f}: {row_str}")
 
-        stdscr.addstr(
-            len(GRID) + 1, 0, "\n"
-        )  # Add a blank line between the sequencer and the status
-        stdscr.addstr(
-            len(GRID) + 1,
-            0,
-            f'''Move with (arrows), press (space) to toggle a step, (x) to clear the pattern, (q) to quit.
-(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
-(k): Selected Kit: {CURRENT_KIT}
-(m): Mute/Unmute Instrument
-(1/2): Toggle 16 or 32 steps
-⇧(1/2/3/4): Fill track w/ preset rhythm
-⇧/(-/=) BPM: {BPM}
-⇧/(5/6) Swing: {SWING}%
-(f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}
-(o/p): Slide Amount: {SLIDE_AMT * 100}%
-'''
-        )
+#         stdscr.addstr(
+#             len(GRID) + 1, 0, "\n"
+#         )  # Add a blank line between the sequencer and the status
+#         stdscr.addstr(
+#             len(GRID) + 1,
+#             0,
+#             f'''Move with (arrows), press (space) to toggle a step, (x) to clear the pattern, (q) to quit.
+# (s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
+# (k): Selected Kit: {CURRENT_KIT}
+# (m): Mute/Unmute Instrument
+# (1/2): Toggle 16 or 32 steps
+# ⇧(1/2/3/4): Fill track w/ preset rhythm
+# ⇧/(-/=) BPM: {BPM}
+# ⇧/(5/6) Swing: {SWING}%
+# (f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}
+# (o/p): Slide Amount: {SLIDE_AMT * 100}%
+# '''
+#         )
 
         stdscr.move(
             CURSOR[0],
@@ -494,9 +502,6 @@ try:
                 # Only switch to the "SMP" kit if any of the samples exist
                 if any_sample_exists():
                     CURRENT_KIT = "SMP"
-                    # Reload the samples every time you switch to the "SMP" kit
-                    for inst in INSTRUMENTS_SMP:
-                        inst.load_sound()  # Use the load_sound method
                 else:
                     CURRENT_KIT = "808"
             else:
@@ -507,6 +512,8 @@ try:
                 instruments = INSTRUMENTS_909
             elif CURRENT_KIT == "SMP":
                 instruments = INSTRUMENTS_SMP
+            for inst in CURRENT_KIT:
+                inst.load_sound()  # Use the load_sound method
         elif c == ord("0") or c == ord(")"):  # handle shift for resetting
             SWING = 50
         elif c == ord("5"):
