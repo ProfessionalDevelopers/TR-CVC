@@ -433,7 +433,7 @@ try:
 (s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
 (k): Selected Kit: {CURRENT_KIT}
 (m): Mute/Unmute Instrument
-(1/2): Toggle 16 or 32 steps
+(1/2): Toggle 16 / 32 / 64 steps
 ⇧(1/2/3/4): Fill track w/ preset rhythm
 ⇧/(-/=) BPM: {BPM}
 ⇧/(5/6) Swing: {SWING}%
@@ -462,14 +462,14 @@ try:
         ):  # use STEP_COUNT instead of 15
             CURSOR[1] += 1
         elif c == ord("1"):
-            STEP_COUNT = 16
-            GRID = [row[:STEP_COUNT]
-                    for row in GRID]  # truncate each row to 16 steps
-            if CURSOR[1] >= STEP_COUNT:  # if cursor is beyond the new step count
-                CURSOR[1] = STEP_COUNT - 1  # move cursor to the last step
+            STEP_COUNT = max(STEP_COUNT // 2, 16)
+            GRID = [row[:STEP_COUNT] for row in GRID]
+            if CURSOR[1] >= STEP_COUNT:
+                CURSOR[1] = STEP_COUNT - 1
         elif c == ord("2"):
-            STEP_COUNT = 32
-            GRID = [row + row for row in GRID]  # duplicate each row
+            if STEP_COUNT < 64:
+                STEP_COUNT *= 2
+                GRID = [row + row[:STEP_COUNT // 2] for row in GRID]
         elif c == ord(" "):
             if CURSOR[0] in [
                 len(instruments) - 2,
