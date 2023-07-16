@@ -84,9 +84,10 @@ def generate_clap_sound(reverb_decay_factor, burst_decay_factor, length, num_bur
     burst = bandpass_filter(burst, *burst_bandpass_freqs, FS)
 
     # Combine the reverb and bursts, with the bursts at higher amplitude
-    clap = reverb + 2.0 * burst
+    clap = reverb + 3.0 * burst
 
     return clap.astype(np.float32)
+
 
 def bandpass_filter(data, lowcut, highcut, fs, order=5):
     nyquist = 0.5 * fs
@@ -196,7 +197,7 @@ COWBELL_808 = generate_sound(380.0, 0.002, int(FS * BPMFRAME))
 HIGH_TOM_909 = generate_kick_sound(350.0, 150.0, 0.0005, int(FS * 0.2))
 MID_TOM_909 = generate_kick_sound(300.0, 125.0, 0.0005, int(FS * 0.2))
 LOW_TOM_909 = generate_kick_sound(200.0, 100.0, 0.0005, int(FS * 0.2))
-CLAP_808 = generate_clap_sound(0.0005, 0.005, int(FS * BPMFRAME * 2), num_bursts=3, burst_delay=0.0015, burst_bandpass_freqs=(2000, 4000))
+CLAP_808 = generate_clap_sound(0.0005, 0.005, int(FS * BPMFRAME * 8), num_bursts=6, burst_delay=0.001, burst_bandpass_freqs=(1500, 4000))
 
 KICK_909 = generate_kick_sound(150.0, 30.0, 0.0002, int(FS * 0.5))  # longer and boomy
 SNARE_909 = generate_sound(220.0, 0.001, int(FS * BPMFRAME))
@@ -211,7 +212,7 @@ COWBELL_909 = generate_sound(480.0, 0.001, int(FS * 0.075))
 HIGH_TOM_808 = generate_kick_sound(350.0, 150.0, 0.0005, int(FS * 0.2))
 MID_TOM_808 = generate_kick_sound(300.0, 125.0, 0.0005, int(FS * 0.2))
 LOW_TOM_808 = generate_kick_sound(200.0, 100.0, 0.0005, int(FS * 0.2))
-CLAP_909 = generate_clap_sound(0.0005, 0.001, int(FS * BPMFRAME * 2), num_bursts=6, burst_delay=0.00075, burst_bandpass_freqs=(1000, 3000))
+CLAP_909 = generate_clap_sound(0.0005, 0.001, int(FS * BPMFRAME * 8), num_bursts=9, burst_delay=0.0015, burst_bandpass_freqs=(1200, 5000))
 
 # PIANO_SOUND = generate_piano_sound(440.0, 0.001, int(FS * BPMFRAME))  # A4 note
 
