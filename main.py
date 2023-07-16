@@ -227,7 +227,7 @@ INSTRUMENTS_808 = [
     Instrument("Ⓚ CB", COWBELL_808, 1.0),
     Instrument("⨂ HH", HIHAT_808, 1.0),
     Instrument("⨁ OH", OPEN_HIHAT_808, 1.0),
-    Instrument("♪ SA", None, 0.8, "sample.wav"),
+    Instrument("♪ SA", None, 1.0, "808-sample-track.wav"),
     Instrument("♩ BL", None, 0.2),
     Instrument("♪ PA", None, 0.8),
 ]
@@ -242,7 +242,7 @@ INSTRUMENTS_909 = [
     Instrument("Ⓚ CB", COWBELL_909, 1.0),
     Instrument("⨂ HH", HIHAT_909, 1.0),
     Instrument("⨁ OH", OPEN_HIHAT_909, 1.0),
-    Instrument("♪ SA", None, 0.8, "sample.wav"),
+    Instrument("♪ SA", None, 1.0, "909-sample-track.wav"),
     Instrument("♩ BL", None, 0.2),
     Instrument("♪ PA", None, 0.8),
 
@@ -258,7 +258,7 @@ INSTRUMENTS_SMP = [
     Instrument("Ⓚ CB", None, 1.0, "cb.wav"),
     Instrument("⨂ HH", None, 1.0, "hh.wav"),
     Instrument("⨁ OH", None, 1.0, "oh.wav"),    
-    Instrument("♪ SA", None, 0.8, "sample.wav"),
+    Instrument("♪ SA", None, 0.8),
     Instrument("♩ BL", None, 0.2),
     Instrument("♪ PA", None, 0.8),
 
