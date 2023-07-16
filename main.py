@@ -159,14 +159,6 @@ def get_instruments():
     elif CURRENT_KIT == "SMP":
         return INSTRUMENTS_SMP
 
-def load_sample(file_path):
-    try:
-        data, _ = librosa.load(file_path, sr=FS)
-        return data
-    except Exception:
-        # print(f"Failed to load sample: {file_path}")
-        return np.zeros(int(FS * BPMFRAME), dtype=np.float32)  # return an array of zeros
-
 def any_sample_exists():
     # Check if any sample exists
     for i, inst in enumerate(INSTRUMENTS_SMP):
