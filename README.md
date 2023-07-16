@@ -14,8 +14,7 @@ Video and sound examples:
 
 - Simple 16/32/64-step sequencer with double-up pattern expansion
 - Bad approxmiations of classic roland 808 and 909 sounds: Bass Drum, Snare, Low- Mid- and High-Toms, Clap, Cowbell, Hihat and Open Hihat, all done in code, no samples.
-- Can also load an all-samples kit.
-- 808 and 909 kits include a single sample track for an external sound
+- Can also load a sample kit.
 - Bassline instrument including filter and slide
 - Piano stabs! 
 - Cycle between kits while playing
