@@ -196,7 +196,7 @@ COWBELL_808 = generate_sound(380.0, 0.002, int(FS * BPMFRAME))
 HIGH_TOM_909 = generate_kick_sound(350.0, 150.0, 0.0005, int(FS * 0.2))
 MID_TOM_909 = generate_kick_sound(300.0, 125.0, 0.0005, int(FS * 0.2))
 LOW_TOM_909 = generate_kick_sound(200.0, 100.0, 0.0005, int(FS * 0.2))
-CLAP_808 = generate_clap_sound(0.0005, 0.005, int(FS * BPMFRAME), num_bursts=3, burst_delay=0.001, burst_bandpass_freqs=(2000, 4000))
+CLAP_808 = generate_clap_sound(0.0005, 0.005, int(FS * BPMFRAME * 2), num_bursts=3, burst_delay=0.0015, burst_bandpass_freqs=(2000, 4000))
 
 KICK_909 = generate_kick_sound(150.0, 30.0, 0.0002, int(FS * 0.5))  # longer and boomy
 SNARE_909 = generate_sound(220.0, 0.001, int(FS * BPMFRAME))
@@ -211,7 +211,7 @@ COWBELL_909 = generate_sound(480.0, 0.001, int(FS * 0.075))
 HIGH_TOM_808 = generate_kick_sound(350.0, 150.0, 0.0005, int(FS * 0.2))
 MID_TOM_808 = generate_kick_sound(300.0, 125.0, 0.0005, int(FS * 0.2))
 LOW_TOM_808 = generate_kick_sound(200.0, 100.0, 0.0005, int(FS * 0.2))
-CLAP_909 = generate_clap_sound(0.0005, 0.001, int(FS * BPMFRAME), num_bursts=6, burst_delay=0.003, burst_bandpass_freqs=(800, 1200))
+CLAP_909 = generate_clap_sound(0.0005, 0.001, int(FS * BPMFRAME * 2), num_bursts=6, burst_delay=0.00075, burst_bandpass_freqs=(1000, 3000))
 
 # PIANO_SOUND = generate_piano_sound(440.0, 0.001, int(FS * BPMFRAME))  # A4 note
 
