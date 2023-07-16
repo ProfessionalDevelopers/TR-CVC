@@ -21,7 +21,7 @@ BPMFRAME = (60 / BPM) / 4
 SEQUENCE_FILE = "sequence.json"  # the file where we'll save and load the sequence
 MASTER_LEVEL = 0.8  # master level
 STEP_COUNT = 16  # add this line
-GRID = ["x" * STEP_COUNT for _ in range(11)]
+GRID = ["x" * STEP_COUNT for _ in range(12)]
 CURSOR = [0, 0]
 COMPLETE_SEQUENCE = np.zeros(STEP_COUNT * int(FS * BPMFRAME), dtype=np.float32)
 SWING = 50
@@ -159,14 +159,6 @@ def get_instruments():
     elif CURRENT_KIT == "SMP":
         return INSTRUMENTS_SMP
 
-def load_sample(file_path):
-    try:
-        data, _ = librosa.load(file_path, sr=FS)
-        return data
-    except Exception:
-        # print(f"Failed to load sample: {file_path}")
-        return np.zeros(int(FS * BPMFRAME), dtype=np.float32)  # return an array of zeros
-
 def any_sample_exists():
     # Check if any sample exists
     for i, inst in enumerate(INSTRUMENTS_SMP):
@@ -227,6 +219,7 @@ INSTRUMENTS_808 = [
     Instrument("Ⓚ CB", COWBELL_808, 1.0),
     Instrument("⨂ HH", HIHAT_808, 1.0),
     Instrument("⨁ OH", OPEN_HIHAT_808, 1.0),
+    Instrument("♪ SA", None, 1.0, "808-sample-track.wav"),
     Instrument("♩ BL", None, 0.2),
     Instrument("♪ PA", None, 0.8),
 ]
@@ -241,8 +234,10 @@ INSTRUMENTS_909 = [
     Instrument("Ⓚ CB", COWBELL_909, 1.0),
     Instrument("⨂ HH", HIHAT_909, 1.0),
     Instrument("⨁ OH", OPEN_HIHAT_909, 1.0),
+    Instrument("♪ SA", None, 1.0, "909-sample-track.wav"),
     Instrument("♩ BL", None, 0.2),
     Instrument("♪ PA", None, 0.8),
+
 ]
 
 INSTRUMENTS_SMP = [
@@ -254,15 +249,23 @@ INSTRUMENTS_SMP = [
     Instrument("॥ CP", None, 0.6, "cp.wav"),
     Instrument("Ⓚ CB", None, 1.0, "cb.wav"),
     Instrument("⨂ HH", None, 1.0, "hh.wav"),
-    Instrument("⨁ OH", None, 1.0, "oh.wav"),
+    Instrument("⨁ OH", None, 1.0, "oh.wav"),    
+    Instrument("♪ SA", None, 0.8),
     Instrument("♩ BL", None, 0.2),
     Instrument("♪ PA", None, 0.8),
+
 ]
 
 SAMPLE_EXISTS = [False for _ in INSTRUMENTS_SMP]
 
 for inst in INSTRUMENTS_SMP:
     inst.load_sound()
+
+for inst in INSTRUMENTS_808:
+     inst.load_sound()
+
+for inst in INSTRUMENTS_909:
+     inst.load_sound()
 
 stdscr = curses.initscr()
 curses.noecho()
