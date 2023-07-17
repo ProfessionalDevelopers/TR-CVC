@@ -26,6 +26,8 @@ Video and sound examples:
 
 Right now, the way to install it is the same as the way to develop it: get the code, install the dependencies and run it.
 
+Note: you'll need a pretty big terminal window. Resize it before launching.
+
 ## Requirements
 
 - Python > 3.11.0
