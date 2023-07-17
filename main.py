@@ -328,8 +328,18 @@ def dump_sequence():
 bassline_freqs = [55, 110, 220]
 piano_freqs = [262, 330, 440]  # frequencies for C4, E4, A4 notes
 
+playhead = 0
+
+def update_playhead_position(playhead):
+    stdscr.addstr(len(GRID), 0, " " * (STEP_COUNT * 5 + len(instruments[0].label) + 7))
+    offset = len(instruments[0].label) + 7
+    offset += playhead // 4  # increment offset after the 4th, 8th, and 12th steps
+    stdscr.addstr(len(GRID), playhead + offset, "*")
+    stdscr.refresh()
+
 
 def update_sequence():
+    global playhead
     dump_sequence()
     global COMPLETE_SEQUENCE, instruments
     instruments = get_instruments()
@@ -399,17 +409,31 @@ def update_sequence():
 
     COMPLETE_SEQUENCE = sum(sequences) * MASTER_LEVEL
 
-
 def playback_function():
-    global PLAYBACK_THREAD, instruments
+    global PLAYBACK_THREAD, instruments, playhead
     with sd.OutputStream(samplerate=FS, channels=1) as stream:
         while PLAYBACK_THREAD is not None:
             if IS_EXITING:
                 stream.abort(True)
                 return
             update_sequence()
-            stream.write(COMPLETE_SEQUENCE)
 
+            # Break the sequence into steps
+            step_size = int(len(COMPLETE_SEQUENCE) / STEP_COUNT)
+            steps = [COMPLETE_SEQUENCE[i: i + step_size] for i in range(0, len(COMPLETE_SEQUENCE), step_size)]
+
+            for step in steps:
+                # First, update the playhead position
+                update_playhead_position(playhead)
+                
+                # Then, play the sound
+                stream.write(step)
+
+                # Finally, update the playhead for the next iteration
+                playhead = (playhead + 1) % STEP_COUNT
+
+                if not PLAYBACK_THREAD:
+                    break
 
 try:
     while True:
@@ -426,13 +450,15 @@ try:
             level = instruments[i].level
             stdscr.addstr(i, 0, f"{label} {level:.2f}: {row_str}")
 
+        stdscr.addstr(len(GRID) + 2, 0, " " * (5 + playhead * 5) + "*")
+
         stdscr.addstr(
             len(GRID) + 1, 0, "\n"
         )  # Add a blank line between the sequencer and the status
         stdscr.addstr(
-            len(GRID) + 1,
+            len(GRID) + 2,
             0,
-            f'''Move with (arrows), press (space) to toggle a step, (x) to clear the pattern, (q) to quit.
+            f'''Move with (arrows), press (space) to toggle a step, (x) to clear the pattern, (q) to quit. 
 (s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
 (k): Selected Kit: {CURRENT_KIT}
 (m): Mute/Unmute Instrument
@@ -570,6 +596,7 @@ try:
             update_sequence()
             if PLAYBACK_THREAD is None:
                 PLAYBACK_THREAD = threading.Thread(target=playback_function)
+                playhead = 0
                 PLAYBACK_THREAD.start()
             else:
                 PLAYBACK_THREAD = None
