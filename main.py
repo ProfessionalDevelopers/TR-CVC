@@ -438,6 +438,7 @@ try:
 (m): Mute/Unmute Instrument
 (1/2): Toggle 16 / 32 / 64 steps
 ⇧(1/2/3/4): Fill track w/ preset rhythm
+⇧([/]) Shift track (or ⇧pattern) rhythm
 ⇧/(-/=) BPM: {BPM}
 ⇧/(5/6) Swing: {SWING}%
 (f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}
@@ -552,6 +553,18 @@ try:
             GRID[CURSOR[0]] = "oooo" * int(STEP_COUNT / 4)
         elif c == ord("$"):
             GRID[CURSOR[0]] = "xxox" * int(STEP_COUNT / 4)
+        elif c == ord('['):  # Shift pattern left
+            GRID[CURSOR[0]] = GRID[CURSOR[0]][1:] + GRID[CURSOR[0]][0]
+        elif c == ord(']'):  # Shift pattern right
+            GRID[CURSOR[0]] = GRID[CURSOR[0]][-1] + GRID[CURSOR[0]][:-1]
+        elif c == ord("{"):
+            # Shift every row left
+            for i in range(len(GRID)):
+                GRID[i] = GRID[i][1:] + GRID[i][0]
+        elif c == ord("}"):
+            # Shift every row right
+            for i in range(len(GRID)):
+                GRID[i] = GRID[i][-1] + GRID[i][:-1]
         elif c == ord("m"):  # Mute/unmute the current track
             if instruments[CURSOR[0]].level == 0.0:
                 INSTRUMENT_MUTE_STATUS[CURSOR[0]] = False  # Unmute the track
