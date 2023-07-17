@@ -416,35 +416,45 @@ try:
 
         stdscr.clear()
 
+        term_size = os.get_terminal_size()
+        term_rows = term_size.lines
+        term_cols = term_size.columns
+
+        # Draw the GRID
         for i, row in enumerate(GRID):
             row_str = " ".join(row[j: j + 4] for j in range(0, STEP_COUNT, 4))
             if CURRENT_KIT == "SMP" and not SAMPLE_EXISTS[i]:
-                # If the current kit is "SMP" and the sample doesn't exist, replace the instrument label with "X"
                 label = "⌀ " + instruments[i].label.split()[1]
             else:
                 label = instruments[i].label
             level = instruments[i].level
             stdscr.addstr(i, 0, f"{label} {level:.2f}: {row_str}")
 
-        stdscr.addstr(
-            len(GRID) + 1, 0, "\n"
-        )  # Add a blank line between the sequencer and the status
-        stdscr.addstr(
-            len(GRID) + 1,
-            0,
-            f'''Move with (arrows), press (space) to toggle a step, (x) to clear the pattern, (q) to quit.
-(s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
-(k): Selected Kit: {CURRENT_KIT}
-(m): Mute/Unmute Instrument
-(1/2): Toggle 16 / 32 / 64 steps
-⇧(1/2/3/4): Fill track w/ preset rhythm
-⇧([/]) Shift track (or ⇧pattern) rhythm
-⇧/(-/=) BPM: {BPM}
-⇧/(5/6) Swing: {SWING}%
-(f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}
-(o/p): Slide Amount: {SLIDE_AMT * 100}%
-'''
-        )
+        # Calculate remaining lines for instructions
+        remaining_lines = term_rows - len(GRID) - 2
+
+        # Truncate instructions if terminal size is smaller
+        instructions = f'''
+ Move with (arrows), press (space) to toggle a step, (x) to clear the pattern, (q) to quit.
+ (s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
+ (k): Selected Kit: {CURRENT_KIT}
+ (m): Mute/Unmute Instrument
+ (1/2): Toggle 16 / 32 / 64 steps
+ ⇧(1/2/3/4): Fill track w/ preset rhythm
+ ⇧([/]) Shift track (or ⇧pattern) rhythm
+ ⇧/(-/=) BPM: {BPM}
+ ⇧/(5/6) Swing: {SWING}%
+ (f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}
+ (o/p): Slide Amount: {SLIDE_AMT * 100}%
+        '''.split("\n")
+
+        # Only display as many instructions as we have lines available
+        for i, instruction in enumerate(instructions[:remaining_lines]):
+            stdscr.addstr(len(GRID) + 1 + i, 0, instruction)
+
+        # If there are more instructions, display "more..."
+        if len(instructions) > remaining_lines:
+            stdscr.addstr(len(GRID) + 1 + remaining_lines, 0, "    ...resize your window to see more controls.")
 
         stdscr.move(
             CURSOR[0],
