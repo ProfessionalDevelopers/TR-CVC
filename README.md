@@ -45,6 +45,16 @@ Note: you'll need a pretty big terminal window. Resize it before launching.
 
 Start up with `pipenv run python main.py`. The command keys are explained on the screen.
 
+
+## Linux Tips 
+Follow the instructions as above. 
+If you get an error like 
+
+`OSError: PortAudio library not found`
+
+1. this S/O link will help: https://stackoverflow.com/a/35593426
+1. then you may need to `pip install librosa` depending on your setup
+
 # TODO
 
 - FX?
