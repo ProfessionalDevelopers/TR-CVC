@@ -12,7 +12,6 @@ import soundfile as sf
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 
-
 IS_EXITING = False
 
 FS = 44100  # sample rate
@@ -34,7 +33,6 @@ SLIDE_AMT = 0.1
 SAMPLES_PATH = os.path.join(current_dir, "samples/") # Modify "samples/" to your samples folder relative path
 
 
-
 class Instrument:
     def __init__(self, label, sound, level, file_name=None):  # Add file_name parameter
         self.label = label
@@ -45,6 +43,7 @@ class Instrument:
     def load_sound(self):
         if self.file_name is not None:
             self.sound = load_sample(os.path.join(SAMPLES_PATH, self.file_name))
+
 
 def generate_sound(freq, decay_factor, length, noise=False):
     x = np.arange(length)
@@ -65,6 +64,7 @@ def generate_kick_sound(start_freq, end_freq, decay_factor, length):
     )
     decay = np.exp(-decay_factor * x)
     return (y * decay).astype(np.float32)
+
 
 def generate_clap_sound(reverb_decay_factor, burst_decay_factor, length, num_bursts=6, burst_delay=0.003, burst_bandpass_freqs=(800, 1200)):
     # Generate the reverberation noise with exponential decay
@@ -162,6 +162,7 @@ def get_instruments():
     elif CURRENT_KIT == "SMP":
         return INSTRUMENTS_SMP
 
+
 def any_sample_exists():
     # Check if any sample exists
     for i, inst in enumerate(INSTRUMENTS_SMP):
@@ -170,6 +171,7 @@ def any_sample_exists():
         else:
             SAMPLE_EXISTS[i] = False
     return any(SAMPLE_EXISTS)
+
 
 def load_sample(file_path):
     try:
@@ -208,8 +210,6 @@ HIGH_TOM_808 = generate_kick_sound(350.0, 150.0, 0.0005, int(FS * 0.2))
 MID_TOM_808 = generate_kick_sound(300.0, 125.0, 0.0005, int(FS * 0.2))
 LOW_TOM_808 = generate_kick_sound(200.0, 100.0, 0.0005, int(FS * 0.2))
 CLAP_909 = generate_clap_sound(0.0005, 0.001, int(FS * BPMFRAME * 8), num_bursts=9, burst_delay=0.0015, burst_bandpass_freqs=(1200, 5000))
-
-# PIANO_SOUND = generate_piano_sound(440.0, 0.001, int(FS * BPMFRAME))  # A4 note
 
 
 INSTRUMENTS_808 = [
@@ -419,7 +419,7 @@ def playback_function():
             update_sequence()
             stream.write(COMPLETE_SEQUENCE)
 
-
+## MAIN LOOP
 try:
     while True:
 
@@ -442,8 +442,6 @@ try:
                 label = instruments[i].label
             level = instruments[i].level
             stdscr.addstr(i, 0, f"{label} {level:.2f}: {row_str}")
-
-
 
         # Calculate remaining lines for instructions
         remaining_lines = term_rows - len(GRID) - 2
@@ -479,6 +477,9 @@ try:
         stdscr.refresh()
 
         c = stdscr.getch()
+
+    ## GLOBAL KEYS
+
         if c == curses.KEY_UP and CURSOR[0] > 0:
                 CURSOR[0] -= 1
         elif c == curses.KEY_DOWN and CURSOR[0] < len(instruments) - 1:
@@ -489,6 +490,8 @@ try:
             c == curses.KEY_RIGHT and CURSOR[1] < STEP_COUNT - 1
         ):  # use STEP_COUNT instead of 15
             CURSOR[1] += 1
+
+        # CHANGE KITS
         elif c == ord("k"):
             if CURRENT_KIT == "808":
                 CURRENT_KIT = "909"
@@ -509,20 +512,10 @@ try:
                 instruments = INSTRUMENTS_909
             elif CURRENT_KIT == "SMP":
                 instruments = INSTRUMENTS_SMP
-        elif c == ord("0") or c == ord(")"):  # handle shift for resetting
-            SWING = 50
-        elif c == ord("5"):
-            SWING = SWING = max(SWING - 5, 0)
-        elif c == ord("6"):
-            SWING = min(SWING + 5, 100)
-        elif c == ord("%"):
-            SWING = SWING = max(SWING - 1, 0)
-        elif c == ord("^"):
-            SWING = min(SWING + 1, 100)
-        elif c == ord("p"):
-            SLIDE_AMT = min(SLIDE_AMT + 0.05, 1)  # swing can't go above 1
-        elif c == ord("o"):
-            SLIDE_AMT = max(SLIDE_AMT - 0.05, 0)  # swing can't go below 0
+
+
+
+        # BPM
         elif c == ord("-"):
             BPM = max(BPM - 5, 1)  # BPM cannot go below 1
             BPMFRAME = (60 / BPM) / 4
@@ -535,22 +528,18 @@ try:
         elif c == ord("+"):
             BPM += 1
             BPMFRAME = (60 / BPM) / 4
+
+        # BASS CONTROLS
         elif c == ord("g"):
             BASSLINE_FILTER_FREQ = min(BASSLINE_FILTER_FREQ * 2, 12800.0)
         elif c == ord("f"):
             BASSLINE_FILTER_FREQ /= 2
-        elif c == ord("x"):
-            GRID = ["x" * STEP_COUNT for _ in range(len(instruments))]
-        elif c == ord("z"):
-            GRID[CURSOR[0]] = "x" * STEP_COUNT
-        elif c == ord("!"):
-            GRID[CURSOR[0]] = "oxxx" * int(STEP_COUNT / 4)
-        elif c == ord("@"):
-            GRID[CURSOR[0]] = "xxxxoxxx" * int(STEP_COUNT / 2)
-        elif c == ord("#"):
-            GRID[CURSOR[0]] = "oooo" * int(STEP_COUNT / 4)
-        elif c == ord("$"):
-            GRID[CURSOR[0]] = "xxox" * int(STEP_COUNT / 4)
+        elif c == ord("p"):
+            SLIDE_AMT = min(SLIDE_AMT + 0.05, 1)  # swing can't go above 1
+        elif c == ord("o"):
+            SLIDE_AMT = max(SLIDE_AMT - 0.05, 0)  # swing can't go below 0
+
+        # CHANNEL MUTE
         elif c == ord("m"):  # Mute/unmute the current track
             if instruments[CURSOR[0]].level == 0.0:
                 INSTRUMENT_MUTE_STATUS[CURSOR[0]] = False  # Unmute the track
@@ -565,39 +554,32 @@ try:
                 instruments[CURSOR[0]].level = 0.0
                 INSTRUMENTS_808[CURSOR[0]].level = 0.0
                 INSTRUMENTS_909[CURSOR[0]].level = 0.0
-        
-        if VELOCITY_MODE == False:
-            if c == ord("1"):
-                STEP_COUNT = max(STEP_COUNT // 2, 16)
-                GRID = [row[:STEP_COUNT] for row in GRID]
-                VELOCITY_GRID = [row[:STEP_COUNT] for row in VELOCITY_GRID]
 
-                if CURSOR[1] >= STEP_COUNT:
-                    CURSOR[1] = STEP_COUNT - 1
-            elif c == ord("2"):
-                if STEP_COUNT < 64:
-                    STEP_COUNT *= 2
-                    GRID = [row + row[:STEP_COUNT // 2] for row in GRID]
-                    VELOCITY_GRID = [row + row[:STEP_COUNT // 2] for row in VELOCITY_GRID]
-            if c == ord(" "):
-                if CURSOR[0] in [len(instruments) - 2, len(instruments) - 1]:  # if cursor is at the 'BL' or 'PA' line
-                    GRID[CURSOR[0]] = (GRID[CURSOR[0]][: CURSOR[1]] + {"x": "o", "o": "u", "u": "p", "p": "x"}[GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1] + 1:])
-                else:
-                    GRID[CURSOR[0]] = (GRID[CURSOR[0]][: CURSOR[1]] + {"x": "o", "o": "x"}[GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1] + 1:])
-                    if GRID[CURSOR[0]][CURSOR[1]] == "x":
-                        VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + "x" + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:]
-                    else:
-                        VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + "9" + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:] 
-        
-        # velocity keys
-        
-        elif VELOCITY_MODE == True:
-            if c in [ord(str(n)) for n in range(10)]:
-                VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + str(c - ord("0")) + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:]
-        
-        ## global keys
-        if c == ord("v"):  # Add this block
+        # SWITCH MODES
+        elif c == ord("v"):  # Add this block
             VELOCITY_MODE = not VELOCITY_MODE
+
+        #PATTERN SHORTCUTS
+        elif c == ord("x"):
+            GRID = ["x" * STEP_COUNT for _ in range(len(instruments))]
+            VELOCITY_GRID = ["x" * STEP_COUNT for _ in range(len(instruments))]
+        elif c == ord("z"):
+            GRID[CURSOR[0]] = "x" * STEP_COUNT
+            VELOCITY_GRID[CURSOR[0]] = "x" * STEP_COUNT
+        elif c == ord("!"):
+            GRID[CURSOR[0]] = "oxxx" * int(STEP_COUNT / 4)
+            VELOCITY_GRID[CURSOR[0]] = "7xxx" * int(STEP_COUNT / 4)
+        elif c == ord("@"):
+            GRID[CURSOR[0]] = "xxxxoxxx" * int(STEP_COUNT / 2)
+            VELOCITY_GRID[CURSOR[0]] = "xxxx7xxx" * int(STEP_COUNT / 2)
+        elif c == ord("#"):
+            GRID[CURSOR[0]] = "oooo" * int(STEP_COUNT / 4)
+            VELOCITY_GRID[CURSOR[0]] = "7777" * int(STEP_COUNT / 4)
+        elif c == ord("$"):
+            GRID[CURSOR[0]] = "xxox" * int(STEP_COUNT / 4)
+            VELOCITY_GRID[CURSOR[0]] = "xx7x" * int(STEP_COUNT / 4)
+
+        #PATTERN SHIFTING
         elif c == ord('['):  # Shift pattern left
             GRID[CURSOR[0]] = GRID[CURSOR[0]][1:] + GRID[CURSOR[0]][0]
             VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][1:] + VELOCITY_GRID[CURSOR[0]][0]
@@ -614,6 +596,8 @@ try:
             for i in range(len(GRID)):
                 GRID[i] = GRID[i][-1] + GRID[i][:-1]
                 VELOCITY_GRID[i] = VELOCITY_GRID[i][-1] + VELOCITY_GRID[i][:-1]
+
+        #PLAY
         elif c == ord("s"):
             update_sequence()
             if PLAYBACK_THREAD is None:
@@ -621,10 +605,58 @@ try:
                 PLAYBACK_THREAD.start()
             else:
                 PLAYBACK_THREAD = None
+
+        #QUIT
         elif c == ord("q"):
             PLAYBACK_THREAD = None
             IS_EXITING = True
             break
+        
+    ## NOTEGRID KEYS
+        
+        if VELOCITY_MODE == False:
+
+            # STEP EXPANSION
+            if c == ord("1"):
+                STEP_COUNT = max(STEP_COUNT // 2, 16)
+                GRID = [row[:STEP_COUNT] for row in GRID]
+                VELOCITY_GRID = [row[:STEP_COUNT] for row in VELOCITY_GRID]
+                if CURSOR[1] >= STEP_COUNT:
+                    CURSOR[1] = STEP_COUNT - 1
+            elif c == ord("2"):
+                if STEP_COUNT < 64:
+                    STEP_COUNT *= 2
+                    GRID = [row + row[:STEP_COUNT // 2] for row in GRID]
+                    VELOCITY_GRID = [row + row[:STEP_COUNT // 2] for row in VELOCITY_GRID]
+
+            #SWING
+            elif c == ord("0") or c == ord(")"):  # handle shift for resetting
+                SWING = 50
+            elif c == ord("5"):
+                SWING = SWING = max(SWING - 5, 0)
+            elif c == ord("6"):
+                SWING = min(SWING + 5, 100)
+            elif c == ord("%"):
+                SWING = SWING = max(SWING - 1, 0)
+            elif c == ord("^"):
+                SWING = min(SWING + 1, 100)
+            
+            # TRIGGER TOGGLES
+            elif c == ord(" "):
+                if CURSOR[0] in [len(instruments) - 2, len(instruments) - 1]:  # if cursor is at the 'BL' or 'PA' line
+                    GRID[CURSOR[0]] = (GRID[CURSOR[0]][: CURSOR[1]] + {"x": "o", "o": "u", "u": "p", "p": "x"}[GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1] + 1:])
+                else:
+                    GRID[CURSOR[0]] = (GRID[CURSOR[0]][: CURSOR[1]] + {"x": "o", "o": "x"}[GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1] + 1:])
+                    if GRID[CURSOR[0]][CURSOR[1]] == "x":
+                        VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + "x" + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:]
+                    else:
+                        VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + "7" + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:] 
+        
+        ## VELOCITY CONTROL
+        elif VELOCITY_MODE == True:
+            if c in [ord(str(n)) for n in range(10)]:
+                VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + str(c - ord("0")) + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:]
+                
 except KeyboardInterrupt:
     print('Interrupted. Exiting.')
     IS_EXITING = True
