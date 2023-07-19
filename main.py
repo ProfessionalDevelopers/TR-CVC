@@ -304,6 +304,15 @@ if os.path.exists(SEQUENCE_FILE):
             else:
                 INSTRUMENTS_808[i].level = ORIGINAL_LEVELS[i]
                 INSTRUMENTS_909[i].level = ORIGINAL_LEVELS[i]
+                
+        for i, inst in enumerate(INSTRUMENTS_808):
+            inst.level = state["instrument_levels"].get(str(i), inst.level)
+
+        for i, inst in enumerate(INSTRUMENTS_909):
+            inst.level = state["instrument_levels"].get(str(i), inst.level)
+
+        for i, inst in enumerate(INSTRUMENTS_SMP):
+            inst.level = state["instrument_levels"].get(str(i), inst.level)
     BPMFRAME = (60 / BPM) / 4
 
 if CURRENT_KIT == "SMP":
