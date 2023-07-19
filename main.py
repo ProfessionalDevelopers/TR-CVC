@@ -181,7 +181,7 @@ def load_sample(file_path):
         return np.zeros(int(FS * BPMFRAME), dtype=np.float32)  # return an array of zeros
 
 
-KICK_808 = generate_kick_sound(65.0, 50.0, 0.0003, int(FS * 0.4))
+KICK_808 = generate_kick_sound(65.0, 50.0, 0.0003, int(FS * 0.4)) * 0.8
 SNARE_808 = generate_sound(180.0, 0.0015, int(FS * BPMFRAME))
 SNARE_808 += generate_sound(0, 0.0015, int(FS * BPMFRAME), noise=True)
 HIHAT_808 = bandpass_filter(
@@ -196,7 +196,7 @@ MID_TOM_909 = generate_kick_sound(300.0, 125.0, 0.0005, int(FS * 0.2))
 LOW_TOM_909 = generate_kick_sound(200.0, 100.0, 0.0005, int(FS * 0.2))
 CLAP_808 = generate_clap_sound(0.0005, 0.005, int(FS * BPMFRAME * 8), num_bursts=6, burst_delay=0.001, burst_bandpass_freqs=(1500, 4000))
 
-KICK_909 = generate_kick_sound(150.0, 30.0, 0.0002, int(FS * 0.5))  # longer and boomy
+KICK_909 = generate_kick_sound(150.0, 30.0, 0.0002, int(FS * 0.5)) * 0.8  # longer and boomy
 SNARE_909 = generate_sound(220.0, 0.001, int(FS * BPMFRAME))
 SNARE_909 += generate_sound(0, 0.001, int(FS * BPMFRAME), noise=True)
 HIHAT_909 = bandpass_filter(
@@ -213,49 +213,49 @@ CLAP_909 = generate_clap_sound(0.0005, 0.001, int(FS * BPMFRAME * 8), num_bursts
 
 
 INSTRUMENTS_808 = [
-    Instrument("⦿ BD", KICK_808, 0.8),
+    Instrument("⦿ BD", KICK_808, 1.0),
     Instrument("◼ SD", SNARE_808, 1.0),
-    Instrument("⚆ LT", LOW_TOM_808, 0.8),
-    Instrument("⚇ MT", MID_TOM_808, 0.7),
-    Instrument("⚈ HT", HIGH_TOM_808, 0.9),
-    Instrument("॥ CP", CLAP_808, 0.6),
+    Instrument("⚆ LT", LOW_TOM_808, 1.0),
+    Instrument("⚇ MT", MID_TOM_808, 1.0),
+    Instrument("⚈ HT", HIGH_TOM_808, 1.0),
+    Instrument("॥ CP", CLAP_808, 1.0),
     Instrument("Ⓚ CB", COWBELL_808, 1.0),
     Instrument("⨂ HH", HIHAT_808, 1.0),
     Instrument("⨁ OH", OPEN_HIHAT_808, 1.0),
     Instrument("♪ SA", None, 1.0, "808-sample-track.wav"),
-    Instrument("♩ BL", None, 0.2),
-    Instrument("♪ PA", None, 0.8),
+    Instrument("♩ BL", None, 1.0),
+    Instrument("♪ PA", None, 1.0),
 ]
 
 INSTRUMENTS_909 = [
-    Instrument("⦿ BD", KICK_909, 0.8),
+    Instrument("⦿ BD", KICK_909, 1.0),
     Instrument("◼ SD", SNARE_909, 1.0),
-    Instrument("⚆ LT", LOW_TOM_909, 0.8),
-    Instrument("⚇ MT", MID_TOM_909, 0.7),
-    Instrument("⚈ HT", HIGH_TOM_909, 0.9),
-    Instrument("॥ CP", CLAP_909, 0.6),
+    Instrument("⚆ LT", LOW_TOM_909, 1.0),
+    Instrument("⚇ MT", MID_TOM_909, 1.0),
+    Instrument("⚈ HT", HIGH_TOM_909, 1.0),
+    Instrument("॥ CP", CLAP_909, 1.0),
     Instrument("Ⓚ CB", COWBELL_909, 1.0),
     Instrument("⨂ HH", HIHAT_909, 1.0),
     Instrument("⨁ OH", OPEN_HIHAT_909, 1.0),
     Instrument("♪ SA", None, 1.0, "909-sample-track.wav"),
-    Instrument("♩ BL", None, 0.2),
-    Instrument("♪ PA", None, 0.8),
+    Instrument("♩ BL", None, 1.0),
+    Instrument("♪ PA", None, 1.0),
 
 ]
 
 INSTRUMENTS_SMP = [
-    Instrument("⦿ BD", None, 0.8, "bd.wav"),
+    Instrument("⦿ BD", None, 1.0, "bd.wav"),
     Instrument("◼ SD", None, 1.0, "sd.wav"),
-    Instrument("⚆ LT", None, 0.8, "lt.wav"),
-    Instrument("⚇ MT", None, 0.7, "mt.wav"),
-    Instrument("⚈ HT", None, 0.9, "ht.wav"),
-    Instrument("॥ CP", None, 0.6, "cp.wav"),
+    Instrument("⚆ LT", None, 1.0, "lt.wav"),
+    Instrument("⚇ MT", None, 1.0, "mt.wav"),
+    Instrument("⚈ HT", None, 1.0, "ht.wav"),
+    Instrument("॥ CP", None, 1.0, "cp.wav"),
     Instrument("Ⓚ CB", None, 1.0, "cb.wav"),
     Instrument("⨂ HH", None, 1.0, "hh.wav"),
     Instrument("⨁ OH", None, 1.0, "oh.wav"),
     Instrument("♪ SA", None, 1.0, "SMP-sample-track.wav"),
-    Instrument("♩ BL", None, 0.2),
-    Instrument("♪ PA", None, 0.8),
+    Instrument("♩ BL", None, 1.0),
+    Instrument("♪ PA", None, 1.0),
 
 ]
 
