@@ -489,15 +489,6 @@ try:
             c == curses.KEY_RIGHT and CURSOR[1] < STEP_COUNT - 1
         ):  # use STEP_COUNT instead of 15
             CURSOR[1] += 1
-        elif c == ord("1"):
-            STEP_COUNT = max(STEP_COUNT // 2, 16)
-            GRID = [row[:STEP_COUNT] for row in GRID]
-            if CURSOR[1] >= STEP_COUNT:
-                CURSOR[1] = STEP_COUNT - 1
-        elif c == ord("2"):
-            if STEP_COUNT < 64:
-                STEP_COUNT *= 2
-                GRID = [row + row[:STEP_COUNT // 2] for row in GRID]
         elif c == ord("k"):
             if CURRENT_KIT == "808":
                 CURRENT_KIT = "909"
@@ -601,7 +592,19 @@ try:
             break
         
         if VELOCITY_MODE == False:
-            if c == ord(" "):
+            if c == ord("1"):
+                STEP_COUNT = max(STEP_COUNT // 2, 16)
+                GRID = [row[:STEP_COUNT] for row in GRID]
+                VELOCITY_GRID = [row[:STEP_COUNT] for row in VELOCITY_GRID]
+
+                if CURSOR[1] >= STEP_COUNT:
+                    CURSOR[1] = STEP_COUNT - 1
+            elif c == ord("2"):
+                if STEP_COUNT < 64:
+                    STEP_COUNT *= 2
+                    GRID = [row + row[:STEP_COUNT // 2] for row in GRID]
+                    VELOCITY_GRID = [row + row[:STEP_COUNT // 2] for row in VELOCITY_GRID]
+            elif c == ord(" "):
                 if CURSOR[0] in [
                     len(instruments) - 2,
                     len(instruments) - 1,
