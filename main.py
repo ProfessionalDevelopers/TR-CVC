@@ -577,19 +577,6 @@ try:
                 instruments[CURSOR[0]].level = 0.0
                 INSTRUMENTS_808[CURSOR[0]].level = 0.0
                 INSTRUMENTS_909[CURSOR[0]].level = 0.0
-        elif c == ord("v"):  # Add this block
-            VELOCITY_MODE = not VELOCITY_MODE
-        elif c == ord("s"):
-            update_sequence()
-            if PLAYBACK_THREAD is None:
-                PLAYBACK_THREAD = threading.Thread(target=playback_function)
-                PLAYBACK_THREAD.start()
-            else:
-                PLAYBACK_THREAD = None
-        elif c == ord("q"):
-            PLAYBACK_THREAD = None
-            IS_EXITING = True
-            break
         
         if VELOCITY_MODE == False:
             if c == ord("1"):
@@ -628,7 +615,21 @@ try:
         elif VELOCITY_MODE == True:
             if c >= ord("0") and c <= ord("9"):  # if key is a digit
                 VELOCITY_GRID[CURSOR[0]][CURSOR[1]] = chr(c)
+        ## global keys
 
+        if c == ord("v"):  # Add this block
+            VELOCITY_MODE = not VELOCITY_MODE
+        elif c == ord("s"):
+            update_sequence()
+            if PLAYBACK_THREAD is None:
+                PLAYBACK_THREAD = threading.Thread(target=playback_function)
+                PLAYBACK_THREAD.start()
+            else:
+                PLAYBACK_THREAD = None
+        elif c == ord("q"):
+            PLAYBACK_THREAD = None
+            IS_EXITING = True
+            break
 except KeyboardInterrupt:
     print('Interrupted. Exiting.')
     IS_EXITING = True
