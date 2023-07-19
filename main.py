@@ -447,13 +447,20 @@ try:
         for i, row in enumerate(GRID):
             if VELOCITY_MODE:
                 velocity_row = [str(v) for v in VELOCITY_GRID[i]]
-                row_str = " ".join("".join(velocity_row[j: j + 4]) for j in range(0, STEP_COUNT, 4))
+                row_str_parts = ["".join(velocity_row[j: j + 4]) for j in range(0, STEP_COUNT, 4)]
             else:
-                row_str = " ".join(row[j: j + 4] for j in range(0, STEP_COUNT, 4))
+                row_str_parts = [row[j: j + 4] for j in range(0, STEP_COUNT, 4)]
+            
+            # Add additional space every 16 steps.
+            row_str = "  ".join(
+                " ".join(row_str_parts[j: j + 4]) for j in range(0, len(row_str_parts), 4)
+            )
+            
             if CURRENT_KIT == "SMP" and not SAMPLE_EXISTS[i]:
                 label = "⌀ " + instruments[i].label.split()[1]
             else:
                 label = instruments[i].label
+            
             level = instruments[i].level
             stdscr.addstr(i, 0, f"{label} {level:.2f}: {row_str}")
 
@@ -486,9 +493,10 @@ try:
 
         stdscr.move(
             CURSOR[0],
-            CURSOR[1] // 4 * 5 + CURSOR[1] % 4 +
+            CURSOR[1] // 4 * 5 + (CURSOR[1] // 16 * 2 - CURSOR[1] // 16) + CURSOR[1] % 4 +
             len(instruments[CURSOR[0]].label) + 7,
         )
+
         stdscr.refresh()
 
         c = stdscr.getch()
