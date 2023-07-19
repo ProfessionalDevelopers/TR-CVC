@@ -400,7 +400,7 @@ def update_sequence():
                             90,
                             0,
                         )
-                        * int(VELOCITY_GRID[j][i]) / 9
+                        # * int(VELOCITY_GRID[j][i]) / 9
                         * instruments[j].level
                     )
                     sound = lowpass_filter(
@@ -411,7 +411,7 @@ def update_sequence():
                         generate_piano_chord(
                             freqs["oup".index(GRID[j][i])], 0.001, int(FS * BPMFRAME)
                         )
-                        * int(VELOCITY_GRID[j][i]) / 9
+                        # * int(VELOCITY_GRID[j][i]) / 9
                         * instruments[j].level
                     )
                 end_index = min(start_index + sound.size, bassline_sequence.size)
