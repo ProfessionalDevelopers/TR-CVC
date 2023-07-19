@@ -22,6 +22,8 @@ SEQUENCE_FILE = "sequence.json"  # the file where we'll save and load the sequen
 MASTER_LEVEL = 0.8  # master level
 STEP_COUNT = 16  # add this line
 GRID = ["x" * STEP_COUNT for _ in range(12)]
+VELOCITY_GRID = [["x"] * STEP_COUNT for _ in range(12)]
+VELOCITY_MODE = False 
 CURSOR = [0, 0]
 COMPLETE_SEQUENCE = np.zeros(STEP_COUNT * int(FS * BPMFRAME), dtype=np.float32)
 SWING = 50
@@ -422,13 +424,19 @@ try:
 
         # Draw the GRID
         for i, row in enumerate(GRID):
-            row_str = " ".join(row[j: j + 4] for j in range(0, STEP_COUNT, 4))
+            if VELOCITY_MODE:
+                velocity_row = [str(v) for v in VELOCITY_GRID[i]]
+                row_str = " ".join("".join(velocity_row[j: j + 4]) for j in range(0, STEP_COUNT, 4))
+            else:
+                row_str = " ".join(row[j: j + 4] for j in range(0, STEP_COUNT, 4))
             if CURRENT_KIT == "SMP" and not SAMPLE_EXISTS[i]:
                 label = "⌀ " + instruments[i].label.split()[1]
             else:
                 label = instruments[i].label
             level = instruments[i].level
             stdscr.addstr(i, 0, f"{label} {level:.2f}: {row_str}")
+
+
 
         # Calculate remaining lines for instructions
         remaining_lines = term_rows - len(GRID) - 2
@@ -501,6 +509,7 @@ try:
                     + {"x": "o", "o": "x"}[GRID[CURSOR[0]][CURSOR[1]]]
                     + GRID[CURSOR[0]][CURSOR[1] + 1:]
                 )
+            VELOCITY_GRID[CURSOR[0]][CURSOR[1]] = "9"
         elif c == ord("k"):
             if CURRENT_KIT == "808":
                 CURRENT_KIT = "909"
@@ -589,6 +598,10 @@ try:
                 instruments[CURSOR[0]].level = 0.0
                 INSTRUMENTS_808[CURSOR[0]].level = 0.0
                 INSTRUMENTS_909[CURSOR[0]].level = 0.0
+        elif c == ord("v"):  # Add this block
+            VELOCITY_MODE = not VELOCITY_MODE
+        elif VELOCITY_MODE and c in [ord(str(i)) for i in range(10)]:  # Add this block
+            VELOCITY_GRID[CURSOR[0]][CURSOR[1]] = chr(c)
         elif c == ord("s"):
             update_sequence()
             if PLAYBACK_THREAD is None:
