@@ -22,7 +22,7 @@ SEQUENCE_FILE = "sequence.json"  # the file where we'll save and load the sequen
 MASTER_LEVEL = 0.8  # master level
 STEP_COUNT = 16  # add this line
 GRID = ["x" * STEP_COUNT for _ in range(12)]
-VELOCITY_GRID = [["x"] * STEP_COUNT for _ in range(12)]
+VELOCITY_GRID = ["x" * STEP_COUNT for _ in range(12)]
 VELOCITY_MODE = False 
 CURSOR = [0, 0]
 COMPLETE_SEQUENCE = np.zeros(STEP_COUNT * int(FS * BPMFRAME), dtype=np.float32)
@@ -591,30 +591,21 @@ try:
                     STEP_COUNT *= 2
                     GRID = [row + row[:STEP_COUNT // 2] for row in GRID]
                     VELOCITY_GRID = [row + row[:STEP_COUNT // 2] for row in VELOCITY_GRID]
-            elif c == ord(" "):
-                if CURSOR[0] in [
-                    len(instruments) - 2,
-                    len(instruments) - 1,
-                ]:  # if cursor is at the 'BL' or 'PA' line
-                    GRID[CURSOR[0]] = (
-                        GRID[CURSOR[0]][: CURSOR[1]]
-                        + {"x": "o", "o": "u", "u": "p",
-                            "p": "x"}[GRID[CURSOR[0]][CURSOR[1]]]
-                        + GRID[CURSOR[0]][CURSOR[1] + 1:]
-                    )
+            if c == ord(" "):
+                if CURSOR[0] in [len(instruments) - 2, len(instruments) - 1]:  # if cursor is at the 'BL' or 'PA' line
+                    GRID[CURSOR[0]] = (GRID[CURSOR[0]][: CURSOR[1]] + {"x": "o", "o": "u", "u": "p", "p": "x"}[GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1] + 1:])
                 else:
-                    GRID[CURSOR[0]] = (
-                        GRID[CURSOR[0]][: CURSOR[1]]
-                        + {"x": "o", "o": "x"}[GRID[CURSOR[0]][CURSOR[1]]]
-                        + GRID[CURSOR[0]][CURSOR[1] + 1:]
-                    )
+                    GRID[CURSOR[0]] = (GRID[CURSOR[0]][: CURSOR[1]] + {"x": "o", "o": "x"}[GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1] + 1:])
                     if GRID[CURSOR[0]][CURSOR[1]] == "x":
-                        VELOCITY_GRID[CURSOR[0]][CURSOR[1]] = "x"
+                        VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + "x" + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:]
                     else:
-                        VELOCITY_GRID[CURSOR[0]][CURSOR[1]] = "9"    
+                        VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + "9" + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:] 
+        
+        # velocity keys
+        
         elif VELOCITY_MODE == True:
-            if c >= ord("0") and c <= ord("9"):  # if key is a digit
-                VELOCITY_GRID[CURSOR[0]][CURSOR[1]] = chr(c)
+            if c in [ord(str(n)) for n in range(10)]:
+                VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + str(c - ord("0")) + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:]
         ## global keys
 
         if c == ord("v"):  # Add this block
