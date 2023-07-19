@@ -492,6 +492,18 @@ try:
         ):  # use STEP_COUNT instead of 15
             CURSOR[1] += 1
 
+        # TRIGGER TOGGLES
+        elif c == ord(" "):
+            if CURSOR[0] in [len(instruments) - 2, len(instruments) - 1]:  # if cursor is at the 'BL' or 'PA' line
+                GRID[CURSOR[0]] = (GRID[CURSOR[0]][: CURSOR[1]] + {"x": "o", "o": "u", "u": "p", "p": "x"}[GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1] + 1:])
+            else:
+                GRID[CURSOR[0]] = (GRID[CURSOR[0]][: CURSOR[1]] + {"x": "o", "o": "x"}[GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1] + 1:])
+                if GRID[CURSOR[0]][CURSOR[1]] == "x":
+                    VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + "x" + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:]
+                else:
+                    VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + "7" + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:] 
+
+
         # CHANGE KITS
         elif c == ord("k"):
             if CURRENT_KIT == "808":
@@ -641,19 +653,8 @@ try:
                 SWING = SWING = max(SWING - 1, 0)
             elif c == ord("^"):
                 SWING = min(SWING + 1, 100)
-            
-            # TRIGGER TOGGLES
-            elif c == ord(" "):
-                if CURSOR[0] in [len(instruments) - 2, len(instruments) - 1]:  # if cursor is at the 'BL' or 'PA' line
-                    GRID[CURSOR[0]] = (GRID[CURSOR[0]][: CURSOR[1]] + {"x": "o", "o": "u", "u": "p", "p": "x"}[GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1] + 1:])
-                else:
-                    GRID[CURSOR[0]] = (GRID[CURSOR[0]][: CURSOR[1]] + {"x": "o", "o": "x"}[GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1] + 1:])
-                    if GRID[CURSOR[0]][CURSOR[1]] == "x":
-                        VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + "x" + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:]
-                    else:
-                        VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + "7" + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:] 
-        
-        ## VELOCITY CONTROL
+                    
+        ## VELOCITY KEYS
         elif VELOCITY_MODE == True:
             if c in [ord(str(n)) for n in range(10)]:
                 VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + str(c - ord("0")) + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:]
