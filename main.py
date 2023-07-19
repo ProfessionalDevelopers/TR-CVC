@@ -400,8 +400,8 @@ def update_sequence():
                             90,
                             0,
                         )
-                        # * int(VELOCITY_GRID[j][i]) / 9
-                        * instruments[j].level
+                        * int(VELOCITY_GRID[j][i]) / 9
+                        * instruments[j].level * 0.2
                     )
                     sound = lowpass_filter(
                         sound, BASSLINE_FILTER_FREQ, FS
@@ -411,7 +411,7 @@ def update_sequence():
                         generate_piano_chord(
                             freqs["oup".index(GRID[j][i])], 0.001, int(FS * BPMFRAME)
                         )
-                        # * int(VELOCITY_GRID[j][i]) / 9
+                        * int(VELOCITY_GRID[j][i]) / 9
                         * instruments[j].level
                     )
                 end_index = min(start_index + sound.size, bassline_sequence.size)
@@ -512,10 +512,10 @@ try:
                 GRID[CURSOR[0]] = (GRID[CURSOR[0]][: CURSOR[1]] + {"x": "o", "o": "u", "u": "p", "p": "x"}[GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1] + 1:])
             else:
                 GRID[CURSOR[0]] = (GRID[CURSOR[0]][: CURSOR[1]] + {"x": "o", "o": "x"}[GRID[CURSOR[0]][CURSOR[1]]] + GRID[CURSOR[0]][CURSOR[1] + 1:])
-                if GRID[CURSOR[0]][CURSOR[1]] == "x":
-                    VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + "x" + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:]
-                else:
-                    VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + "7" + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:] 
+            if GRID[CURSOR[0]][CURSOR[1]] == "x":
+                VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + "x" + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:]
+            else:
+                VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + "7" + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:] 
 
 
         # CHANGE KITS
