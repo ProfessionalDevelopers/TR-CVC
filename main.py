@@ -260,6 +260,7 @@ INSTRUMENTS_SMP = [
 ]
 
 SAMPLE_EXISTS = [False for _ in INSTRUMENTS_SMP]
+INSTRUMENT_LEVELS = {i: 1.0 for i in range(len(INSTRUMENTS_808))}
 
 for inst in INSTRUMENTS_SMP:
     inst.load_sound()
@@ -285,6 +286,7 @@ if os.path.exists(SEQUENCE_FILE):
         VELOCITY_GRID = state["velocity_grid"]
         SWING = state["swing"]
         CURRENT_KIT = state["current_kit"]
+        INSTRUMENT_LEVELS = {int(k): v for k, v in state["instrument_levels"].items()}
         BPM = state.get("bpm", 120.0)
         BASSLINE_FILTER_FREQ = state.get("bassline_freq", 880.0)
         SLIDE_AMT = state.get("slide_amt", 0.1)
@@ -318,6 +320,7 @@ def dump_sequence():
                 "velocity_grid": VELOCITY_GRID,
                 "swing": SWING,
                 "current_kit": CURRENT_KIT,
+                "instrument_levels": INSTRUMENT_LEVELS,
                 "bpm": BPM,
                 "bassline_freq": BASSLINE_FILTER_FREQ,
                 "mute_status": INSTRUMENT_MUTE_STATUS,  # Add the mute status to the saved state
@@ -528,7 +531,19 @@ try:
             elif CURRENT_KIT == "SMP":
                 instruments = INSTRUMENTS_SMP
 
-
+        # LEVELS
+        elif c == ord("."):  # Shift + Up arrow
+            # Increase the level of the current instrument
+            INSTRUMENT_LEVELS[CURSOR[0]] = min(INSTRUMENT_LEVELS[CURSOR[0]] + 0.1, 1.0)
+            # Update the level of the current instrument in each kit
+            for inst in [INSTRUMENTS_808, INSTRUMENTS_909, INSTRUMENTS_SMP]:
+                inst[CURSOR[0]].level = INSTRUMENT_LEVELS[CURSOR[0]]
+        elif c == ord(","):  # Shift + Down arrow
+            # Decrease the level of the current instrument
+            INSTRUMENT_LEVELS[CURSOR[0]] = max(INSTRUMENT_LEVELS[CURSOR[0]] - 0.1, 0.0)
+            # Update the level of the current instrument in each kit
+            for inst in [INSTRUMENTS_808, INSTRUMENTS_909, INSTRUMENTS_SMP]:
+                inst[CURSOR[0]].level = INSTRUMENT_LEVELS[CURSOR[0]]
 
         # BPM
         elif c == ord("-"):
