@@ -304,7 +304,7 @@ if os.path.exists(SEQUENCE_FILE):
             else:
                 INSTRUMENTS_808[i].level = ORIGINAL_LEVELS[i]
                 INSTRUMENTS_909[i].level = ORIGINAL_LEVELS[i]
-                
+
         for i, inst in enumerate(INSTRUMENTS_808):
             inst.level = state["instrument_levels"].get(str(i), inst.level)
 
@@ -466,7 +466,7 @@ try:
  (s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
  (k): Selected Kit: {CURRENT_KIT}
  (v) Velocity Mode: {VELOCITY_MODE}
- (m): Mute/Unmute Instrument
+ (,/./m): Adjust instrument volume / mute 
  (1/2): Toggle 16 / 32 / 64 steps
  ⇧(1/2/3/4): Fill track w/ preset rhythm
  ⇧([/]) Shift track (or ⇧pattern) rhythm
