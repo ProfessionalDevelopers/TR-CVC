@@ -451,6 +451,7 @@ try:
  Move with (arrows), press (space) to toggle a step, (x) to clear the pattern, (q) to quit.
  (s): Status: {"Playing" if PLAYBACK_THREAD else "Stopped"}
  (k): Selected Kit: {CURRENT_KIT}
+ (v) Velocity Mode: {VELOCITY_MODE}
  (m): Mute/Unmute Instrument
  (1/2): Toggle 16 / 32 / 64 steps
  ⇧(1/2/3/4): Fill track w/ preset rhythm
