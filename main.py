@@ -282,6 +282,7 @@ if os.path.exists(SEQUENCE_FILE):
     with open(SEQUENCE_FILE) as f:
         state = json.load(f)
         GRID = state["grid"]
+        VELOCITY_GRID = state["velocity_grid"]
         SWING = state["swing"]
         CURRENT_KIT = state["current_kit"]
         BPM = state.get("bpm", 120.0)
@@ -314,6 +315,7 @@ def dump_sequence():
         json.dump(
             {
                 "grid": GRID,
+                "velocity_grid": VELOCITY_GRID,
                 "swing": SWING,
                 "current_kit": CURRENT_KIT,
                 "bpm": BPM,
