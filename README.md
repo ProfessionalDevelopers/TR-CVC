@@ -12,7 +12,7 @@ Video and sound examples:
 
 # Features
 
-- Simple 16/32/64-step sequencer with double-up pattern expansion
+- Simple 16/32/64-step sequencer with double-up pattern expansion with velocity control
 - Easily pre-fill with standard rhythms, or shift rhythms across a pattern
 - Bad approxmiations of classic roland 808 and 909 sounds: Bass Drum, Snare, Low- Mid- and High-Toms, Clap, Cowbell, Hihat and Open Hihat, all done in code, no samples.
 - Can also load a sample kit.
