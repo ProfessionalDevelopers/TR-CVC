@@ -32,7 +32,7 @@ CURRENT_KIT = "808"
 BASSLINE_FILTER_FREQ = 880.0
 SLIDE_AMT = 0.1
 SAMPLES_PATH = os.path.join(current_dir, "samples/") # Modify "samples/" to your samples folder relative path
-mode = "normal"  # can be "normal" or "velocity"
+
 
 
 class Instrument:
@@ -354,6 +354,10 @@ def update_sequence():
 
             if GRID[j][i] != "x" and instruments[j].sound is not None:
                 sound = instruments[j].sound * instruments[j].level
+                # Apply velocity to sound if it's not 'x'
+                if VELOCITY_GRID[j][i] != "x":
+                    velocity = int(VELOCITY_GRID[j][i]) / 9
+                    sound *= velocity
                 end_index = min(start_index + sound.size, instrument_sequence.size)
                 instrument_sequence[start_index:end_index] += sound[
                     : end_index - start_index
@@ -473,27 +477,129 @@ try:
         stdscr.refresh()
 
         c = stdscr.getch()
-        if VELOCITY_MODE == False:
-            if c == curses.KEY_UP and CURSOR[0] > 0:
+        if c == curses.KEY_UP and CURSOR[0] > 0:
                 CURSOR[0] -= 1
-            elif c == curses.KEY_DOWN and CURSOR[0] < len(instruments) - 1:
-                CURSOR[0] += 1
-            elif c == curses.KEY_LEFT and CURSOR[1] > 0:
-                CURSOR[1] -= 1
-            elif (
-                c == curses.KEY_RIGHT and CURSOR[1] < STEP_COUNT - 1
-            ):  # use STEP_COUNT instead of 15
-                CURSOR[1] += 1
-            elif c == ord("1"):
-                STEP_COUNT = max(STEP_COUNT // 2, 16)
-                GRID = [row[:STEP_COUNT] for row in GRID]
-                if CURSOR[1] >= STEP_COUNT:
-                    CURSOR[1] = STEP_COUNT - 1
-            elif c == ord("2"):
-                if STEP_COUNT < 64:
-                    STEP_COUNT *= 2
-                    GRID = [row + row[:STEP_COUNT // 2] for row in GRID]
-            elif c == ord(" "):
+        elif c == curses.KEY_DOWN and CURSOR[0] < len(instruments) - 1:
+            CURSOR[0] += 1
+        elif c == curses.KEY_LEFT and CURSOR[1] > 0:
+            CURSOR[1] -= 1
+        elif (
+            c == curses.KEY_RIGHT and CURSOR[1] < STEP_COUNT - 1
+        ):  # use STEP_COUNT instead of 15
+            CURSOR[1] += 1
+        elif c == ord("1"):
+            STEP_COUNT = max(STEP_COUNT // 2, 16)
+            GRID = [row[:STEP_COUNT] for row in GRID]
+            if CURSOR[1] >= STEP_COUNT:
+                CURSOR[1] = STEP_COUNT - 1
+        elif c == ord("2"):
+            if STEP_COUNT < 64:
+                STEP_COUNT *= 2
+                GRID = [row + row[:STEP_COUNT // 2] for row in GRID]
+        elif c == ord("k"):
+            if CURRENT_KIT == "808":
+                CURRENT_KIT = "909"
+            elif CURRENT_KIT == "909":
+                # Only switch to the "SMP" kit if any of the samples exist
+                if any_sample_exists():
+                    CURRENT_KIT = "SMP"
+                    # Reload the samples every time you switch to the "SMP" kit
+                    for inst in INSTRUMENTS_SMP:
+                        inst.load_sound()  # Use the load_sound method
+                else:
+                    CURRENT_KIT = "808"
+            else:
+                CURRENT_KIT = "808"
+            if CURRENT_KIT == "808":
+                instruments = INSTRUMENTS_808
+            elif CURRENT_KIT == "909":
+                instruments = INSTRUMENTS_909
+            elif CURRENT_KIT == "SMP":
+                instruments = INSTRUMENTS_SMP
+        elif c == ord("0") or c == ord(")"):  # handle shift for resetting
+            SWING = 50
+        elif c == ord("5"):
+            SWING = SWING = max(SWING - 5, 0)
+        elif c == ord("6"):
+            SWING = min(SWING + 5, 100)
+        elif c == ord("%"):
+            SWING = SWING = max(SWING - 1, 0)
+        elif c == ord("^"):
+            SWING = min(SWING + 1, 100)
+        elif c == ord("p"):
+            SLIDE_AMT = min(SLIDE_AMT + 0.05, 1)  # swing can't go above 1
+        elif c == ord("o"):
+            SLIDE_AMT = max(SLIDE_AMT - 0.05, 0)  # swing can't go below 0
+        elif c == ord("-"):
+            BPM = max(BPM - 5, 1)  # BPM cannot go below 1
+            BPMFRAME = (60 / BPM) / 4
+        elif c == ord("="):
+            BPM += 5
+            BPMFRAME = (60 / BPM) / 4
+        elif c == ord("_"):
+            BPM = max(BPM - 1, 1)  # BPM cannot go below 1
+            BPMFRAME = (60 / BPM) / 4
+        elif c == ord("+"):
+            BPM += 1
+            BPMFRAME = (60 / BPM) / 4
+        elif c == ord("g"):
+            BASSLINE_FILTER_FREQ = min(BASSLINE_FILTER_FREQ * 2, 12800.0)
+        elif c == ord("f"):
+            BASSLINE_FILTER_FREQ /= 2
+        elif c == ord("x"):
+            GRID = ["x" * STEP_COUNT for _ in range(len(instruments))]
+        elif c == ord("z"):
+            GRID[CURSOR[0]] = "x" * STEP_COUNT
+        elif c == ord("!"):
+            GRID[CURSOR[0]] = "oxxx" * int(STEP_COUNT / 4)
+        elif c == ord("@"):
+            GRID[CURSOR[0]] = "xxxxoxxx" * int(STEP_COUNT / 2)
+        elif c == ord("#"):
+            GRID[CURSOR[0]] = "oooo" * int(STEP_COUNT / 4)
+        elif c == ord("$"):
+            GRID[CURSOR[0]] = "xxox" * int(STEP_COUNT / 4)
+        elif c == ord('['):  # Shift pattern left
+            GRID[CURSOR[0]] = GRID[CURSOR[0]][1:] + GRID[CURSOR[0]][0]
+        elif c == ord(']'):  # Shift pattern right
+            GRID[CURSOR[0]] = GRID[CURSOR[0]][-1] + GRID[CURSOR[0]][:-1]
+        elif c == ord("{"):
+            # Shift every row left
+            for i in range(len(GRID)):
+                GRID[i] = GRID[i][1:] + GRID[i][0]
+        elif c == ord("}"):
+            # Shift every row right
+            for i in range(len(GRID)):
+                GRID[i] = GRID[i][-1] + GRID[i][:-1]
+        elif c == ord("m"):  # Mute/unmute the current track
+            if instruments[CURSOR[0]].level == 0.0:
+                INSTRUMENT_MUTE_STATUS[CURSOR[0]] = False  # Unmute the track
+                instruments[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
+                INSTRUMENTS_808[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
+                INSTRUMENTS_909[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
+            else:
+                INSTRUMENT_MUTE_STATUS[CURSOR[0]] = True  # Mute the track
+                ORIGINAL_LEVELS[CURSOR[0]] = instruments[
+                    CURSOR[0]
+                ].level  # Save the current level
+                instruments[CURSOR[0]].level = 0.0
+                INSTRUMENTS_808[CURSOR[0]].level = 0.0
+                INSTRUMENTS_909[CURSOR[0]].level = 0.0
+        elif c == ord("v"):  # Add this block
+            VELOCITY_MODE = not VELOCITY_MODE
+        elif c == ord("s"):
+            update_sequence()
+            if PLAYBACK_THREAD is None:
+                PLAYBACK_THREAD = threading.Thread(target=playback_function)
+                PLAYBACK_THREAD.start()
+            else:
+                PLAYBACK_THREAD = None
+        elif c == ord("q"):
+            PLAYBACK_THREAD = None
+            IS_EXITING = True
+            break
+        
+        if VELOCITY_MODE == False:
+            if c == ord(" "):
                 if CURSOR[0] in [
                     len(instruments) - 2,
                     len(instruments) - 1,
@@ -513,113 +619,11 @@ try:
                     if GRID[CURSOR[0]][CURSOR[1]] == "x":
                         VELOCITY_GRID[CURSOR[0]][CURSOR[1]] = "x"
                     else:
-                        VELOCITY_GRID[CURSOR[0]][CURSOR[1]] = "9"
-            elif c == ord("k"):
-                if CURRENT_KIT == "808":
-                    CURRENT_KIT = "909"
-                elif CURRENT_KIT == "909":
-                    # Only switch to the "SMP" kit if any of the samples exist
-                    if any_sample_exists():
-                        CURRENT_KIT = "SMP"
-                        # Reload the samples every time you switch to the "SMP" kit
-                        for inst in INSTRUMENTS_SMP:
-                            inst.load_sound()  # Use the load_sound method
-                    else:
-                        CURRENT_KIT = "808"
-                else:
-                    CURRENT_KIT = "808"
-                if CURRENT_KIT == "808":
-                    instruments = INSTRUMENTS_808
-                elif CURRENT_KIT == "909":
-                    instruments = INSTRUMENTS_909
-                elif CURRENT_KIT == "SMP":
-                    instruments = INSTRUMENTS_SMP
-            elif c == ord("0") or c == ord(")"):  # handle shift for resetting
-                SWING = 50
-            elif c == ord("5"):
-                SWING = SWING = max(SWING - 5, 0)
-            elif c == ord("6"):
-                SWING = min(SWING + 5, 100)
-            elif c == ord("%"):
-                SWING = SWING = max(SWING - 1, 0)
-            elif c == ord("^"):
-                SWING = min(SWING + 1, 100)
-            elif c == ord("p"):
-                SLIDE_AMT = min(SLIDE_AMT + 0.05, 1)  # swing can't go above 1
-            elif c == ord("o"):
-                SLIDE_AMT = max(SLIDE_AMT - 0.05, 0)  # swing can't go below 0
-            elif c == ord("-"):
-                BPM = max(BPM - 5, 1)  # BPM cannot go below 1
-                BPMFRAME = (60 / BPM) / 4
-            elif c == ord("="):
-                BPM += 5
-                BPMFRAME = (60 / BPM) / 4
-            elif c == ord("_"):
-                BPM = max(BPM - 1, 1)  # BPM cannot go below 1
-                BPMFRAME = (60 / BPM) / 4
-            elif c == ord("+"):
-                BPM += 1
-                BPMFRAME = (60 / BPM) / 4
-            elif c == ord("g"):
-                BASSLINE_FILTER_FREQ = min(BASSLINE_FILTER_FREQ * 2, 12800.0)
-            elif c == ord("f"):
-                BASSLINE_FILTER_FREQ /= 2
-            elif c == ord("x"):
-                GRID = ["x" * STEP_COUNT for _ in range(len(instruments))]
-            elif c == ord("z"):
-                GRID[CURSOR[0]] = "x" * STEP_COUNT
-            elif c == ord("!"):
-                GRID[CURSOR[0]] = "oxxx" * int(STEP_COUNT / 4)
-            elif c == ord("@"):
-                GRID[CURSOR[0]] = "xxxxoxxx" * int(STEP_COUNT / 2)
-            elif c == ord("#"):
-                GRID[CURSOR[0]] = "oooo" * int(STEP_COUNT / 4)
-            elif c == ord("$"):
-                GRID[CURSOR[0]] = "xxox" * int(STEP_COUNT / 4)
-            elif c == ord('['):  # Shift pattern left
-                GRID[CURSOR[0]] = GRID[CURSOR[0]][1:] + GRID[CURSOR[0]][0]
-            elif c == ord(']'):  # Shift pattern right
-                GRID[CURSOR[0]] = GRID[CURSOR[0]][-1] + GRID[CURSOR[0]][:-1]
-            elif c == ord("{"):
-                # Shift every row left
-                for i in range(len(GRID)):
-                    GRID[i] = GRID[i][1:] + GRID[i][0]
-            elif c == ord("}"):
-                # Shift every row right
-                for i in range(len(GRID)):
-                    GRID[i] = GRID[i][-1] + GRID[i][:-1]
-            elif c == ord("m"):  # Mute/unmute the current track
-                if instruments[CURSOR[0]].level == 0.0:
-                    INSTRUMENT_MUTE_STATUS[CURSOR[0]] = False  # Unmute the track
-                    instruments[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
-                    INSTRUMENTS_808[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
-                    INSTRUMENTS_909[CURSOR[0]].level = ORIGINAL_LEVELS[CURSOR[0]]
-                else:
-                    INSTRUMENT_MUTE_STATUS[CURSOR[0]] = True  # Mute the track
-                    ORIGINAL_LEVELS[CURSOR[0]] = instruments[
-                        CURSOR[0]
-                    ].level  # Save the current level
-                    instruments[CURSOR[0]].level = 0.0
-                    INSTRUMENTS_808[CURSOR[0]].level = 0.0
-                    INSTRUMENTS_909[CURSOR[0]].level = 0.0
-            elif c == ord("v"):  # Add this block
-                VELOCITY_MODE = not VELOCITY_MODE
-            elif c == ord("s"):
-                update_sequence()
-                if PLAYBACK_THREAD is None:
-                    PLAYBACK_THREAD = threading.Thread(target=playback_function)
-                    PLAYBACK_THREAD.start()
-                else:
-                    PLAYBACK_THREAD = None
-            elif c == ord("q"):
-                PLAYBACK_THREAD = None
-                IS_EXITING = True
-                break
+                        VELOCITY_GRID[CURSOR[0]][CURSOR[1]] = "9"    
         elif VELOCITY_MODE == True:
-            if c == ord("v"):  # switch back to normal mode
-                VELOCITY_MODE = not VELOCITY_MODE
-            elif c >= ord("0") and c <= ord("9"):  # if key is a digit
+            if c >= ord("0") and c <= ord("9"):  # if key is a digit
                 VELOCITY_GRID[CURSOR[0]][CURSOR[1]] = chr(c)
+
 except KeyboardInterrupt:
     print('Interrupted. Exiting.')
     IS_EXITING = True
