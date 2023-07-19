@@ -499,12 +499,10 @@ try:
                 CURSOR[0] -= 1
         elif c == curses.KEY_DOWN and CURSOR[0] < len(instruments) - 1:
             CURSOR[0] += 1
-        elif c == curses.KEY_LEFT and CURSOR[1] > 0:
-            CURSOR[1] -= 1
-        elif (
-            c == curses.KEY_RIGHT and CURSOR[1] < STEP_COUNT - 1
-        ):  # use STEP_COUNT instead of 15
-            CURSOR[1] += 1
+        elif c == curses.KEY_LEFT:
+            CURSOR[1] = (CURSOR[1] - 1) % STEP_COUNT
+        elif c == curses.KEY_RIGHT:
+            CURSOR[1] = (CURSOR[1] + 1) % STEP_COUNT
 
         # TRIGGER TOGGLES
         elif c == ord(" "):
