@@ -551,18 +551,6 @@ try:
             GRID[CURSOR[0]] = "oooo" * int(STEP_COUNT / 4)
         elif c == ord("$"):
             GRID[CURSOR[0]] = "xxox" * int(STEP_COUNT / 4)
-        elif c == ord('['):  # Shift pattern left
-            GRID[CURSOR[0]] = GRID[CURSOR[0]][1:] + GRID[CURSOR[0]][0]
-        elif c == ord(']'):  # Shift pattern right
-            GRID[CURSOR[0]] = GRID[CURSOR[0]][-1] + GRID[CURSOR[0]][:-1]
-        elif c == ord("{"):
-            # Shift every row left
-            for i in range(len(GRID)):
-                GRID[i] = GRID[i][1:] + GRID[i][0]
-        elif c == ord("}"):
-            # Shift every row right
-            for i in range(len(GRID)):
-                GRID[i] = GRID[i][-1] + GRID[i][:-1]
         elif c == ord("m"):  # Mute/unmute the current track
             if instruments[CURSOR[0]].level == 0.0:
                 INSTRUMENT_MUTE_STATUS[CURSOR[0]] = False  # Unmute the track
@@ -606,10 +594,26 @@ try:
         elif VELOCITY_MODE == True:
             if c in [ord(str(n)) for n in range(10)]:
                 VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][: CURSOR[1]] + str(c - ord("0")) + VELOCITY_GRID[CURSOR[0]][CURSOR[1] + 1:]
+        
         ## global keys
-
         if c == ord("v"):  # Add this block
             VELOCITY_MODE = not VELOCITY_MODE
+        elif c == ord('['):  # Shift pattern left
+            GRID[CURSOR[0]] = GRID[CURSOR[0]][1:] + GRID[CURSOR[0]][0]
+            VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][1:] + VELOCITY_GRID[CURSOR[0]][0]
+        elif c == ord(']'):  # Shift pattern right
+            GRID[CURSOR[0]] = GRID[CURSOR[0]][-1] + GRID[CURSOR[0]][:-1]
+            VELOCITY_GRID[CURSOR[0]] = VELOCITY_GRID[CURSOR[0]][-1] + VELOCITY_GRID[CURSOR[0]][:-1]
+        elif c == ord("{"):
+            # Shift every row left
+            for i in range(len(GRID)):
+                GRID[i] = GRID[i][1:] + GRID[i][0]
+                VELOCITY_GRID[i] = VELOCITY_GRID[i][1:] + VELOCITY_GRID[i][0]
+        elif c == ord("}"):
+            # Shift every row right
+            for i in range(len(GRID)):
+                GRID[i] = GRID[i][-1] + GRID[i][:-1]
+                VELOCITY_GRID[i] = VELOCITY_GRID[i][-1] + VELOCITY_GRID[i][:-1]
         elif c == ord("s"):
             update_sequence()
             if PLAYBACK_THREAD is None:
