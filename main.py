@@ -213,7 +213,7 @@ CLAP_909 = generate_clap_sound(0.0005, 0.001, int(FS * BPMFRAME * 8), num_bursts
 
 
 INSTRUMENTS_808 = [
-    Instrument("⦿ BD", KICK_808, 1.0),
+    Instrument("⦿ BD", KICK_808, 0.7),
     Instrument("◼ SD", SNARE_808, 1.0),
     Instrument("⚆ LT", LOW_TOM_808, 1.0),
     Instrument("⚇ MT", MID_TOM_808, 1.0),
@@ -301,18 +301,25 @@ if os.path.exists(SEQUENCE_FILE):
             if mute:
                 INSTRUMENTS_808[i].level = 0.0
                 INSTRUMENTS_909[i].level = 0.0
+                INSTRUMENTS_SMP[i].level = 0.0
             else:
                 INSTRUMENTS_808[i].level = ORIGINAL_LEVELS[i]
                 INSTRUMENTS_909[i].level = ORIGINAL_LEVELS[i]
+                INSTRUMENTS_SMP[i].level = 0.0
+
 
         for i, inst in enumerate(INSTRUMENTS_808):
-            inst.level = state["instrument_levels"].get(str(i), inst.level)
+            if not INSTRUMENT_MUTE_STATUS.get(i, False):
+                inst.level = state["instrument_levels"].get(str(i), inst.level)
 
         for i, inst in enumerate(INSTRUMENTS_909):
-            inst.level = state["instrument_levels"].get(str(i), inst.level)
+            if not INSTRUMENT_MUTE_STATUS.get(i, False):
+                inst.level = state["instrument_levels"].get(str(i), inst.level)
 
         for i, inst in enumerate(INSTRUMENTS_SMP):
-            inst.level = state["instrument_levels"].get(str(i), inst.level)
+            if not INSTRUMENT_MUTE_STATUS.get(i, False):
+                inst.level = state["instrument_levels"].get(str(i), inst.level)
+
     BPMFRAME = (60 / BPM) / 4
 
 if CURRENT_KIT == "SMP":
