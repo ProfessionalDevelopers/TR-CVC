@@ -8,7 +8,7 @@ The goal was to build a drum machine with reatlime editing capabilities, combine
 
 Video and sound examples:
 
-<https://github.com/ProfessionalDevelopers/TR-CVC/assets/1034155/1e1cb11a-2c46-49c6-a75b-2a59f77cc64f>
+https://github.com/ProfessionalDevelopers/TR-CVC/assets/1034155/5152e76a-297c-4dca-b71a-1a5703ee3cfe
 
 # Features
 
