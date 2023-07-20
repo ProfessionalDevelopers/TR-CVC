@@ -213,7 +213,7 @@ CLAP_909 = generate_clap_sound(0.0005, 0.001, int(FS * BPMFRAME * 8), num_bursts
 
 
 INSTRUMENTS_808 = [
-    Instrument("⦿ BD", KICK_808, 0.7),
+    Instrument("⦿ BD", KICK_808, 1.0),
     Instrument("◼ SD", SNARE_808, 1.0),
     Instrument("⚆ LT", LOW_TOM_808, 1.0),
     Instrument("⚇ MT", MID_TOM_808, 1.0),
