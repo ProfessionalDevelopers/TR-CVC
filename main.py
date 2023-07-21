@@ -484,6 +484,7 @@ try:
  (1/2): Toggle 16 / 32 / 64 steps
  ⇧(1/2/3/4): Fill track w/ preset rhythm
  ⇧([/]) Shift track (or ⇧pattern) rhythm
+ (z/x) Clear track / pattern
  ⇧/(-/=) BPM: {BPM}
  ⇧/(5/6) Swing: {SWING}%
  (f/g): Bass Filter Freq: {BASSLINE_FILTER_FREQ}
