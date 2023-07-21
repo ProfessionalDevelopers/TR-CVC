@@ -2,7 +2,7 @@
 
 A very basic drum machine and bassline synthesizer, based incredibly loosely on the Roland TR-303, TR-909 and TB-808 machines.
 
-This was built entirely through interaction with OpenAI's ChatGPT, specifically using GPT-4's Code Intepreter plugin.
+This was built [entirely](https://chat.openai.com/share/afa04d65-8686-4dcf-b428-720b7f3ed91d) through interaction with OpenAI's ChatGPT, specifically using GPT-4's Code Intepreter plugin.
 
 The goal was to build a drum machine with reatlime editing capabilities, combined with the ability to add additional sounds and sequencing modes.
 
